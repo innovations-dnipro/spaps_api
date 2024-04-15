@@ -1,0 +1,95 @@
+version: "3.8"
+services:
+  spaps-mysql:
+    container_name: ${APP_NAME}-mysql-${APP_ENV}
+    image: 'mysql:8.2.0'
+    restart: always
+    ports: 
+      - ${MYSQL_TCP_PORT}:3306
+    env_file: 
+      - .env
+    networks:
+      - spaps-network
+    volumes:
+      - spaps-mysql-volume:/var/lib/mysql
+    
+  spaps-phpmyadmin:
+    image: "phpmyadmin/phpmyadmin:latest"
+    restart: always
+    ports:
+      - 8080:80
+    env_file: 
+      - .env
+    depends_on:
+      - spaps-mysql
+    links: 
+      - spaps-mysql
+    networks:
+      - spaps-network
+    volumes:
+      - spaps-phpmyadmin-volume:/var/lib/phpmyadmin
+
+  spaps-redis:
+    container_name: ${APP_NAME}-redis-${APP_ENV}
+    image: "redis:latest"
+    env_file: .env
+    ports:
+      - "51527:6379"
+      - "51528:6380"
+
+  spaps-minio:
+    container_name: "${APP_NAME}-minio-${APP_ENV}"
+    image: minio/minio
+    restart: always
+    # volumes:
+    #   - spaps-minio-data:/minio-data
+    command: 'minio server /minio-data --console-address ":9001"'
+    env_file: .env
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.minio-storage.rule=Host(${APP_MINIO_STORAGE_HOST_NAME}) && PathPrefix(/)"
+      - "traefik.http.routers.minio-storage.entrypoints=websecure"
+      - "traefik.http.routers.minio-storage.tls=true"
+      - "traefik.http.routers.minio-storage.tls.certresolver=myresolver"
+      - "traefik.http.routers.minio-storage.service=minio-storage-service"
+      - "traefik.http.services.minio-storage-service.loadbalancer.server.port=9000"
+
+      - "traefik.http.routers.minio-browser.rule=Host(${APP_MINIO_BROWSER_HOST_NAME}) && PathPrefix(/)"
+      - "traefik.http.routers.minio-browser.entrypoints=websecure"
+      - "traefik.http.routers.minio-browser.tls=true"
+      - "traefik.http.routers.minio-browser.tls.certresolver=myresolver"
+      - "traefik.http.routers.minio-browser.service=minio-browser-service"
+      - "traefik.http.services.minio-browser-service.loadbalancer.server.port=9001"
+    healthcheck:
+      test:
+        ['CMD', 'curl', '-f', 'http://localhost:9001/minio/health/live']
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    ports:
+      - '51525:9000'
+      - '51526:9001'
+    networks:
+      - spaps-network
+  
+  de-fi_connect-minio-createbuckets:
+    image: minio/mc
+    depends_on:
+      - spaps-minio
+    entrypoint: >
+      /bin/sh -c "
+      /usr/bin/mc alias set myminio http://minio:9000 $MINIO_ROOT_USER $MINIO_ROOT_PASSWORD;
+      /usr/bin/mc mb myminio/$AWS_PUBLIC_BUCKET_NAME;
+      /usr/bin/mc anonymous set public myminio/$AWS_PUBLIC_BUCKET_NAME;
+      exit 0;
+      "
+    networks:
+      - spaps-network
+
+volumes:
+  spaps-mysql-volume:
+  spaps-phpmyadmin-volume:
+  spaps-minio-data:
+
+networks:
+  spaps-network:
