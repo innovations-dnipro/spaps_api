@@ -1,0 +1,86 @@
+# A github workflow that is designed to auto-deploy a project on a server
+# It consists of two main parts, run_tests and auto_deploy.
+# run_tests - run unit tests of the project, if the unit tests
+# are not passed, the deployment will be canceled.
+# auto_deploy of the application on the server, here the images
+# are assembled, the images are sent to the registry and a post request
+# is made to the server webhook so that the server picks up new
+# images and starts up with new images
+
+name: deploy
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  auto_deploy:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true && (github.event.pull_request.base.ref == 'main' || github.event.pull_request.base.ref == 'develop')
+    steps:
+      - uses: actions/checkout@master
+      - name: Set env vars (TEST)
+        if: github.event.pull_request.base.ref == 'develop'
+        run: |
+          echo "API_DOCKERFILE_PATH=Dockerfile" >> $GITHUB_ENV
+          echo "WEBHOOK=${{ secrets.PORTAINER_WEBHOOK_URL_TEST }}" >> $GITHUB_ENV
+          echo "REGISTRY=${{ secrets.DOCKER_REGISTRY_TEST }}" >> $GITHUB_ENV
+          echo "LATEST_IMAGE=${{ secrets.DOCKER_REGISTRY_TEST }}":latest >> $GITHUB_ENV
+          echo "COMMIT_IMAGE=${{ secrets.DOCKER_REGISTRY_TEST }}":${{ github.sha }} >> $GITHUB_ENV
+          echo "HEALTHCHECK=${{ secrets.TEST_HEALTHCHECK_API_SERVER_URL }}" >> $GITHUB_ENV
+      - name: Set env vars (PROD)
+        if: github.event.pull_request.base.ref == 'main'
+        run: |
+          echo "API_DOCKERFILE_PATH=Dockerfile" >> $GITHUB_ENV
+          echo "REGISTRY=${{ secrets.DOCKER_REGISTRY_PROD }}" >> $GITHUB_ENV
+          echo "WEBHOOK=${{ secrets.PORTAINER_WEBHOOK_URL_PROD }}" >> $GITHUB_ENV
+          echo "LATEST_IMAGE=${{ secrets.DOCKER_REGISTRY_PROD }}":latest >> $GITHUB_ENV
+          echo "COMMIT_IMAGE=${{ secrets.DOCKER_REGISTRY_PROD }}":${{ github.sha }} >> $GITHUB_ENV
+          echo "HEALTHCHECK=${{ secrets.PROD_HEALTHCHECK_API_SERVER_URL }}" >> $GITHUB_ENV
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.REGISTRY_USERNAME }}
+          password: ${{ secrets.REGISTRY_PASSWORD }}
+
+      - name: Pull latest image (API)
+        run: |
+          docker pull ${{ env.LATEST_IMAGE }} --ignore-pull-failures || true
+      - name: Build image (API)
+        working-directory: .
+        run: |
+          docker build -f ${{ env.API_DOCKERFILE_PATH }} -t ${{ env.COMMIT_IMAGE }} .
+      - name: Tag latest image (API)
+        run: |
+          docker tag ${{ env.COMMIT_IMAGE }} ${{ env.LATEST_IMAGE }}
+      - name: Push images (API)
+        run: |
+          docker push ${{ env.COMMIT_IMAGE }}
+          docker push ${{ env.LATEST_IMAGE }}
+      - name: Trigger deploy in portainer
+        run: |
+          echo "PORTAINER_STATUS_CODE=$(curl -s -o /dev/null -w "%{http_code}" -X POST ${{ env.WEBHOOK }})" >> $GITHUB_ENV
+      - name: Stop deploy
+        if: ${{ env.PORTAINER_STATUS_CODE != 204}}
+        uses: saulmaldonado/skip-workflow@v1
+        with:
+          fail-fast: 'true'
+      - name: Run healthcheck (TEST)
+        if: github.event.pull_request.base.ref == 'develop'
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 15
+          max_attempts: 3
+          retry_on: error
+          command: |
+            curl -X "GET" "${{ env.HEALTHCHECK }}" -H "accept: application/json"
+      - name: Run healthcheck (PROD)
+        if: github.event.pull_request.base.ref == 'main'
+        uses: nick-fields/retry@v3
+        with:
+          timeout_seconds: 15
+          max_attempts: 3
+          retry_on: error
+          command: |
+            curl -X "GET" "${{ env.HEALTHCHECK }}" -H "accept: application/json"
