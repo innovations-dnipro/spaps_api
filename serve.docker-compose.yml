@@ -34,8 +34,8 @@ services:
     image: "redis:latest"
     env_file: .env
     ports:
-      - "51527:6379"
-      - "51528:6380"
+      - ${REDIS_PRIMARY_PORT}:6379
+      - ${REDIS_SECONDARY_PORT}:6380
 
   spaps-minio:
     container_name: "${APP_NAME}-minio-${APP_ENV}"
