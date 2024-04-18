@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt'
 import { Cache } from 'cache-manager'
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
@@ -15,7 +16,7 @@ import {
   generateFiveRandomDigits,
 } from '@spaps/core/utils'
 
-import { CreateUserDto } from '../core-module/user/dto'
+import { LoginDto, RegisterUserDto } from './dto'
 
 @Injectable()
 export class AuthService {
@@ -41,7 +42,7 @@ export class AuthService {
     firstName,
     lastName,
     role,
-  }: CreateUserDto): Promise<string> {
+  }: RegisterUserDto): Promise<string> {
     const [foundUserByEmail, wrongRole, createdLastKeyWithinMinute]: [
       Nullable<User>,
       Nullable<string>,
@@ -68,7 +69,7 @@ export class AuthService {
 
     if (createdLastKeyWithinMinute) {
       throw new HttpException(
-        CError.IS_REGISTER_CONFIRMATION_CODE_TOO_SOON,
+        CError.IS_CONFIRMATION_CODE_TOO_SOON,
         HttpStatus.BAD_REQUEST,
       )
     }
@@ -88,7 +89,7 @@ export class AuthService {
 
     if (!jsonValue) {
       throw new HttpException(
-        CError.WRONG_REGISTER_CONFIRMATION_CODE,
+        CError.WRONG_CONFIRMATION_CODE,
         HttpStatus.BAD_REQUEST,
       )
     }
@@ -103,5 +104,105 @@ export class AuthService {
     )
 
     return registrationToken
+  }
+
+  async getPasswordResetEmail({ email }: { email: string }) {
+    const [foundUser, createdLastKeyWithinMinute]: [
+      Nullable<User>,
+      Nullable<string>,
+    ] = await Promise.all([
+      this.userService.findUserByEmail(email),
+      this.cacheManager.get(email) as unknown as Nullable<string>,
+    ])
+
+    if (!foundUser) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    if (createdLastKeyWithinMinute) {
+      throw new HttpException(
+        CError.IS_CONFIRMATION_CODE_TOO_SOON,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    const fiveDigitCode = await this.getNewFiveRandomDigits()
+    const value = JSON.stringify({ email, id: foundUser.id })
+
+    await Promise.all([
+      this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
+      this.cacheManager.set(email, email, 60000), //NOTE: 1 min
+    ])
+
+    return fiveDigitCode
+  }
+
+  async getPasswordResetConfirmCode({
+    email,
+    code,
+  }: {
+    email: string
+    code: string
+  }) {
+    const jsonValue = (await this.cacheManager.get(code)) as unknown as string
+
+    if (!jsonValue) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    const jsonParsedValue = JSON.parse(jsonValue)
+    const { id, email: storedEmail } = jsonParsedValue
+
+    if (!id || storedEmail !== email) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    const passwordRestorationToken: string = await this.jwtService.sign(
+      {
+        passwordRestorationData: Buffer.from(jsonValue).toString('base64'),
+      },
+      {
+        expiresIn: process.env.PASSWORD_RESTORATION_TOKEN_EXPIRATION,
+      },
+    )
+
+    return passwordRestorationToken
+  }
+
+  async login({
+    email,
+    password,
+  }: LoginDto): Promise<{ accessToken: string; user: User }> {
+    const foundUser: User | null = await this.userService.findUserByEmail(email)
+
+    if (!foundUser) {
+      throw new HttpException(CError.EMAIL_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const matchPasswords = await bcrypt.compare(password, foundUser.password)
+
+    if (!matchPasswords) {
+      throw new HttpException(CError.WRONG_PASSWORD, HttpStatus.BAD_REQUEST)
+    }
+
+    const accessToken = await this.jwtService.sign(
+      {
+        id: foundUser.id,
+      },
+      {
+        expiresIn: process.env.AUTH_TOKEN_EXPIRATION,
+      },
+    )
+
+    return {
+      accessToken,
+      user: foundUser,
+    }
   }
 }

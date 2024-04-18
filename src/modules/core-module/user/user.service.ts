@@ -1,8 +1,6 @@
 import { genSalt, hash } from 'bcrypt'
-import { Cache } from 'cache-manager'
 import { Repository } from 'typeorm'
 
-import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
@@ -16,7 +14,6 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-    @Inject(CACHE_MANAGER) private cacheManager: Cache,
   ) {}
 
   findUserById(id: number): Promise<Nullable<User>> {
@@ -31,11 +28,8 @@ export class UserService {
     return this.userRepository.findOneBy({ phone })
   }
 
-  async setPassword(
-    { password }: { password: string },
-    registeredUser: Partial<User>,
-  ) {
-    const { firstName, lastName, email, role } = registeredUser
+  async createUser(userData: Partial<User>) {
+    const { firstName, lastName, email, role, password } = userData
 
     const [foundUserByEmail, wrongRole]: [Nullable<User>, Nullable<string>] =
       await Promise.all([
@@ -69,5 +63,25 @@ export class UserService {
     })
 
     return this.userRepository.save(newUser)
+  }
+
+  async updateUser(userData: Partial<User>) {
+    const { id, password } = userData
+
+    const foundUser: Nullable<User> = await this.findUserById(id)
+
+    if (!foundUser) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const saltRounds = parseInt(process.env.PASSWORD_SALT_ROUNDS)
+    const salt = await genSalt(saltRounds)
+    const hashedPassword: string = await hash(password, salt)
+    const updatedUser: User = this.userRepository.create({
+      ...foundUser,
+      password: hashedPassword,
+    })
+
+    return this.userRepository.save(updatedUser)
   }
 }

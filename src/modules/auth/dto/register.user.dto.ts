@@ -16,7 +16,7 @@ import { LATIN_CYRILLIC_LETTER_NAME_REGEX } from '@spaps/core/utils'
 
 dotenv.config()
 
-export class CreateUserDto {
+export class RegisterUserDto {
   @IsString()
   @MaxLength(parseInt(process.env.MAX_FIRST_NAME_LENGTH))
   @MinLength(1)
