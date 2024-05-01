@@ -18,8 +18,8 @@ dotenv.config()
 
 export class RegisterUserDto {
   @IsString()
+  @MinLength(parseInt(process.env.MIN_FIRST_NAME_LENGTH))
   @MaxLength(parseInt(process.env.MAX_FIRST_NAME_LENGTH))
-  @MinLength(1)
   @IsNotEmpty()
   @Matches(LATIN_CYRILLIC_LETTER_NAME_REGEX)
   @ApiProperty({
@@ -30,8 +30,8 @@ export class RegisterUserDto {
   readonly firstName: string
 
   @IsString()
+  @MinLength(parseInt(process.env.MIN_LAST_NAME_LENGTH))
   @MaxLength(parseInt(process.env.MAX_LAST_NAME_LENGTH))
-  @MinLength(1)
   @IsNotEmpty()
   @Matches(LATIN_CYRILLIC_LETTER_NAME_REGEX)
   @ApiProperty({

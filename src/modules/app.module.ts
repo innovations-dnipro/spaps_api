@@ -10,6 +10,7 @@ import { TypeORMConfig } from '@spaps/config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
+import { ClientModule } from './client/client.module'
 
 dotenv.config()
 
@@ -17,7 +18,7 @@ dotenv.config()
   imports: [
     ConfigModule.forRoot({
       expandVariables: true,
-      envFilePath: ['stack.env'], //NOTE: for dev mode, use .serve.env; for prod mode, use stack.env
+      envFilePath: ['.env'], //NOTE: for dev mode, use .serve.env; for prod mode, use stack.env
     }),
     TypeOrmModule.forRoot({
       ...TypeORMConfig,
@@ -30,6 +31,7 @@ dotenv.config()
       },
     }),
     AuthModule,
+    ClientModule,
   ],
   controllers: [AppController],
   providers: [AppService],

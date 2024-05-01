@@ -24,10 +24,6 @@ export class UserService {
     return this.userRepository.findOneBy({ email })
   }
 
-  findUserByPhone(phone: string): Promise<Nullable<User>> {
-    return this.userRepository.findOneBy({ phone })
-  }
-
   async createUser(userData: Partial<User>) {
     const { firstName, lastName, email, role, password } = userData
 
