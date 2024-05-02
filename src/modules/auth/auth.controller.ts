@@ -112,7 +112,7 @@ export class AuthController {
     description: 'Will return the confirmation code.',
     type: Number,
   })
-  async register(@Body() data: RegisterUserDto): Promise<string> {
+  async register(@Body() data: RegisterUserDto): Promise<boolean> {
     return this.authService.register(data)
   }
 
@@ -208,7 +208,7 @@ export class AuthController {
     description: 'Will return the confirmation code.',
     type: Number,
   })
-  async getPasswordResetEmail(@Param('email') email: string): Promise<string> {
+  async getPasswordResetEmail(@Param('email') email: string): Promise<boolean> {
     return this.authService.getPasswordResetEmail({
       email,
     })
