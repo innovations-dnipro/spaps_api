@@ -7,8 +7,9 @@ import { JwtService } from '@nestjs/jwt'
 
 import { User } from '@spaps/modules/core-module/user/user.entity'
 import { UserService } from '@spaps/modules/core-module/user/user.service'
+import { TaskService } from '@spaps/modules/task/task.service'
 
-import { ENonAdminRole } from '@spaps/core/enums'
+import { EEmailVariant, ENonAdminRole } from '@spaps/core/enums'
 import {
   CError,
   Nullable,
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
+    private readonly taskService: TaskService,
   ) {}
 
   async getNewFiveRandomDigits(): Promise<string> {
@@ -42,7 +44,7 @@ export class AuthService {
     firstName,
     lastName,
     role,
-  }: RegisterUserDto): Promise<string> {
+  }: RegisterUserDto): Promise<boolean> {
     const [foundUserByEmail, wrongRole, createdLastKeyWithinMinute]: [
       Nullable<User>,
       Nullable<string>,
@@ -74,14 +76,26 @@ export class AuthService {
       )
     }
 
-    const fiveDigitCode = await this.getNewFiveRandomDigits()
-    const value = JSON.stringify({ firstName, lastName, email, role })
-    await Promise.all([
-      this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
-      this.cacheManager.set(email, email, 60000), //NOTE: 1 min
-    ])
+    try {
+      const fiveDigitCode = await this.getNewFiveRandomDigits()
+      const value = JSON.stringify({ firstName, lastName, email, role })
+      await Promise.all([
+        this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
+        this.cacheManager.set(email, email, 60000), //NOTE: 1 min
+      ])
 
-    return fiveDigitCode
+      this.taskService.addSendCodeTask({
+        code: fiveDigitCode,
+        variant: EEmailVariant.EMAIL_REGISTRATION,
+        email,
+        firstName,
+        lastName,
+      })
+
+      return true
+    } catch {
+      return false
+    }
   }
 
   async confirmCode({ code }: { code: string }): Promise<string> {
@@ -126,15 +140,27 @@ export class AuthService {
       )
     }
 
-    const fiveDigitCode = await this.getNewFiveRandomDigits()
-    const value = JSON.stringify({ email, id: foundUser.id })
+    try {
+      const fiveDigitCode = await this.getNewFiveRandomDigits()
+      const value = JSON.stringify({ email, id: foundUser.id })
 
-    await Promise.all([
-      this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
-      this.cacheManager.set(email, email, 60000), //NOTE: 1 min
-    ])
+      await Promise.all([
+        this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
+        this.cacheManager.set(email, email, 60000), //NOTE: 1 min
+      ])
 
-    return fiveDigitCode
+      this.taskService.addSendCodeTask({
+        code: fiveDigitCode,
+        variant: EEmailVariant.PASSWORD_CHANGE,
+        email,
+        firstName: foundUser.firstName,
+        lastName: foundUser.lastName,
+      })
+
+      return true
+    } catch {
+      return false
+    }
   }
 
   async getPasswordResetConfirmCode({
