@@ -2,11 +2,11 @@ import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm'
 
 import { ApiProperty } from '@nestjs/swagger'
 
+import { User } from '@spaps/modules/core-module/user/user.entity'
+
 import { BasicEntity } from '@spaps/core/basic-entity'
 import { EGender } from '@spaps/core/enums'
 import { formatDateToDateTime } from '@spaps/core/utils'
-
-import { User } from '../core-module/user/user.entity'
 
 @Entity({ name: 'client' })
 export class Client extends BasicEntity {
@@ -18,8 +18,11 @@ export class Client extends BasicEntity {
     type: 'date',
     transformer: {
       from: (value: Date) => formatDateToDateTime({ value }),
-      to: (value: string) => new Date(value),
+      to: (value: string | undefined) =>
+        typeof value === 'string' ? new Date(value) : value,
     },
+    default: null,
+    nullable: true,
   })
   birthDate: Date
 
@@ -27,7 +30,7 @@ export class Client extends BasicEntity {
     example: EGender.FEMALE,
     description: "Client's gender.",
   })
-  @Column({ type: 'enum', enum: EGender, default: EGender.FEMALE })
+  @Column({ type: 'enum', enum: EGender, default: null, nullable: true })
   gender: EGender
 
   @ApiProperty({
@@ -46,4 +49,8 @@ export class Client extends BasicEntity {
   @ManyToMany(() => User, (user) => user.clients)
   @JoinTable()
   users: User[]
+
+  // @ManyToMany(() => PublicFile, (publicFile) => publicFile.userAvatars)
+  // @JoinTable()
+  // avatars: PublicFile[]
 }

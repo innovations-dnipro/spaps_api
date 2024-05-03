@@ -102,15 +102,11 @@ export class AuthController {
     description: 'Model to register a new non-admin user.',
     type: RegisterUserDto,
   })
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Will return boolean value. If true, it means the confirmation code was sent to the email.',
-  //   type: Boolean,
-  // })
   @ApiResponse({
     status: 200,
-    description: 'Will return the confirmation code.',
-    type: Number,
+    description:
+      'Will return boolean value. If true, it means the confirmation code was sent to the email.',
+    type: Boolean,
   })
   async register(@Body() data: RegisterUserDto): Promise<boolean> {
     return this.authService.register(data)
@@ -171,7 +167,7 @@ export class AuthController {
     @Req() request: ExRequest,
     @Res({ passthrough: true }) response: ExResponse,
   ): Promise<User> {
-    let hasRegisterToken = Boolean(
+    const hasRegisterToken = Boolean(
       request?.['cookies']?.[process.env.REGISTRATION_TOKEN_NAME],
     )
 
@@ -179,14 +175,12 @@ export class AuthController {
       throw new HttpException(CError.NO_REGISTER_TOKEN, HttpStatus.BAD_REQUEST)
     }
 
-    const user = await this.userService.createUser({
-      ...data,
-      ...registeredUser,
-    })
-
     response.clearCookie(process.env.REGISTRATION_TOKEN_NAME, this.cookieConfig)
 
-    return user
+    return this.authService.createUser({
+      ...registeredUser,
+      ...data,
+    })
   }
 
   @Get('password-reset-email/:email')
@@ -198,15 +192,11 @@ export class AuthController {
     type: 'string',
     example: 'test@gmail.com',
   } as ApiParamOptions)
-  // @ApiResponse({
-  //   status: 200,
-  //   description: 'Will return boolean value. If true, it means the confirmation code was sent to the email.',
-  //   type: Boolean,
-  // })
   @ApiResponse({
     status: 200,
-    description: 'Will return the confirmation code.',
-    type: Number,
+    description:
+      'Will return boolean value. If true, it means the confirmation code was sent to the email.',
+    type: Boolean,
   })
   async getPasswordResetEmail(@Param('email') email: string): Promise<boolean> {
     return this.authService.getPasswordResetEmail({
@@ -279,8 +269,8 @@ export class AuthController {
     }
 
     const user = await this.userService.updateUser({
-      ...data,
       ...passwordRestoringUser,
+      ...data,
     })
 
     response.clearCookie(

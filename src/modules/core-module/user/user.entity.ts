@@ -5,6 +5,7 @@ import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm'
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Client } from '@spaps/modules/client/client.entity'
+import { Rentor } from '@spaps/modules/rentor/rentor.entity'
 
 import { BasicEntity } from '@spaps/core/basic-entity'
 import { ERole } from '@spaps/core/enums'
@@ -71,6 +72,8 @@ export class User extends BasicEntity {
   // avatars: PublicFile[]
 
   @ManyToMany(() => Client, (client) => client.users)
-  @JoinTable()
   clients: Client[]
+
+  @ManyToMany(() => Rentor, (rentor) => rentor.users)
+  rentors: Rentor[]
 }

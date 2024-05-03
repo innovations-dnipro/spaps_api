@@ -5,13 +5,13 @@ export const formatDateToDateTime = ({
   providesHours = false,
   providesMinutes = false,
 }: {
-  value: Date
+  value: Date | undefined | string
   withTime?: boolean
   dateFrom?: boolean
   providesHours?: boolean
   providesMinutes?: boolean
-}): string | null | Date => {
-  if (typeof value === 'string' || value === null) {
+}): string | null | undefined | Date => {
+  if (typeof value === 'string' || !value) {
     return value
   }
 

@@ -5,11 +5,15 @@ import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
 
+import { Client } from '@spaps/modules/client/client.entity'
+import { ClientService } from '@spaps/modules/client/client.service'
 import { User } from '@spaps/modules/core-module/user/user.entity'
 import { UserService } from '@spaps/modules/core-module/user/user.service'
+import { Rentor } from '@spaps/modules/rentor/rentor.entity'
+import { RentorService } from '@spaps/modules/rentor/rentor.service'
 import { TaskService } from '@spaps/modules/task/task.service'
 
-import { EEmailVariant, ENonAdminRole } from '@spaps/core/enums'
+import { EEmailVariant, ENonAdminRole, ERole } from '@spaps/core/enums'
 import {
   CError,
   Nullable,
@@ -26,6 +30,8 @@ export class AuthService {
     private readonly jwtService: JwtService,
     @Inject(CACHE_MANAGER) private cacheManager: Cache,
     private readonly taskService: TaskService,
+    private readonly clientService: ClientService,
+    private readonly rentorService: RentorService,
   ) {}
 
   async getNewFiveRandomDigits(): Promise<string> {
@@ -205,7 +211,8 @@ export class AuthService {
     email,
     password,
   }: LoginDto): Promise<{ accessToken: string; user: User }> {
-    const foundUser: User | null = await this.userService.findUserByEmail(email)
+    const foundUser: User | null =
+      await this.userService.findUserByEmailWithRelations(email)
 
     if (!foundUser) {
       throw new HttpException(CError.EMAIL_NOT_FOUND, HttpStatus.BAD_REQUEST)
@@ -229,6 +236,27 @@ export class AuthService {
     return {
       accessToken,
       user: foundUser,
+    }
+  }
+
+  async createUser(user: Partial<User>): Promise<User> {
+    let rentor: Nullable<Partial<Rentor>>
+    let client: Nullable<Partial<Client>>
+
+    const createdUser = await this.userService.createUser(user)
+
+    if (user.role === ERole.CLIENT) {
+      client = await this.clientService.createClient(createdUser)
+    }
+
+    if (user.role === ERole.RENTOR) {
+      rentor = await this.rentorService.createRentor(createdUser)
+    }
+
+    return {
+      ...createdUser,
+      ...(client ? { clients: [client as Client] } : {}),
+      ...(rentor ? { rentors: [rentor as Rentor] } : {}),
     }
   }
 }

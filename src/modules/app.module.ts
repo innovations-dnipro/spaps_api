@@ -9,7 +9,12 @@ import { TypeORMConfig } from '@spaps/config'
 import { AppController } from './app.controller'
 import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
+import { Client } from './client/client.entity'
 import { ClientModule } from './client/client.module'
+import { CoreModule } from './core-module/core.module'
+import { User } from './core-module/user/user.entity'
+import { Rentor } from './rentor/rentor.entity'
+import { RentorModule } from './rentor/rentor.module'
 import { TaskModule } from './task/task.module'
 
 dotenv.config()
@@ -22,11 +27,13 @@ dotenv.config()
     }),
     TypeOrmModule.forRoot({
       ...TypeORMConfig,
-      entities: [],
+      entities: [User, Rentor, Client],
     } as TypeOrmModuleOptions),
+    CoreModule,
     AuthModule,
-    ClientModule,
     TaskModule,
+    ClientModule,
+    RentorModule,
   ],
   controllers: [AppController],
   providers: [AppService],
