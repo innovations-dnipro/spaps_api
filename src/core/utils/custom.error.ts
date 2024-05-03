@@ -5,10 +5,12 @@ export const CError = {
   NAME_ALREADY_EXISTS: `${EError.NAME_ALREADY_EXISTS}: An item with this name already exists.`,
   PHONE_ALREADY_EXISTS: `${EError.PHONE_ALREADY_EXISTS}: An item with this phone already exists.`,
   EMAIL_ALREADY_EXISTS: `${EError.EMAIL_ALREADY_EXISTS}: An item with this email already exists.`,
+  CLIENT_ALREADY_EXITS: `${EError.CLIENT_ALREADY_EXITS}: This user account already has a client profile.`,
   //NOTE: Wrong enum
   WRONG_ENUM: `${EError.WRONG_ENUM}: Wrong enum value.`,
   WRONG_CONFIRMATION_CODE: `${EError.WRONG_CONFIRMATION_CODE}: The cofirmation code is either wrong or expired.`,
   WRONG_PASSWORD: `${EError.WRONG_PASSWORD}: Wrong password.`,
+  WRONG_USER_ID_OR_CLIENT_ID: `${EError.WRONG_USER_ID_OR_CLIENT_ID}: Token user id and client id are not related.`,
   //NOTE: too early request
   IS_CONFIRMATION_CODE_TOO_SOON: `${EError.IS_CONFIRMATION_CODE_TOO_SOON}: Request to create new confirmation code is too soon. Wait one minute since last code creation.`,
   //NOTE: no token
@@ -18,4 +20,5 @@ export const CError = {
   //NOTE: not found
   USER_NOT_FOUND: `${EError.USER_NOT_FOUND}: User was not found.`,
   EMAIL_NOT_FOUND: `${EError.EMAIL_NOT_FOUND}: Email was not found`,
+  CLIENT_NOT_FOUND: `${EError.CLIENT_NOT_FOUND}: Client was not found`,
 }

@@ -1,25 +1,26 @@
 import {
-  IsEmail,
+  IsDateString,
   IsEnum,
   IsNotEmpty,
+  IsOptional,
   IsString,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator'
-import * as dotenv from 'dotenv'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { ENonAdminRole } from '@spaps/core/enums'
-import { LATIN_CYRILLIC_LETTER_NAME_REGEX } from '@spaps/core/utils'
+import { EGender } from '@spaps/core/enums'
+import {
+  LATIN_CYRILLIC_LETTER_NAME_REGEX,
+  YYYY_MM_DD_REGEX,
+} from '@spaps/core/utils'
 
-dotenv.config()
-
-export class RegisterUserDto {
+export class UpdateClientDto {
   @IsString()
-  @MinLength(parseInt(process.env.MIN_FIRST_NAME_LENGTH))
   @MaxLength(parseInt(process.env.MAX_FIRST_NAME_LENGTH))
+  @MinLength(1)
   @IsNotEmpty()
   @Matches(LATIN_CYRILLIC_LETTER_NAME_REGEX)
   @ApiProperty({
@@ -30,33 +31,34 @@ export class RegisterUserDto {
   readonly firstName: string
 
   @IsString()
-  @MinLength(parseInt(process.env.MIN_LAST_NAME_LENGTH))
   @MaxLength(parseInt(process.env.MAX_LAST_NAME_LENGTH))
+  @MinLength(1)
   @IsNotEmpty()
   @Matches(LATIN_CYRILLIC_LETTER_NAME_REGEX)
   @ApiProperty({
     example: 'Johnson',
-    description: 'Enter first name.',
+    description: 'Enter last name.',
     type: String,
   })
   readonly lastName: string
 
+  @IsOptional()
   @IsString()
-  @IsEmail()
-  @MaxLength(parseInt(process.env.MAX_EMAIL_LENGTH))
+  @IsEnum(EGender)
   @ApiProperty({
-    example: 'test@gmail.com',
-    description: 'Enter the email address.',
+    example: EGender.FEMALE,
+    description: 'Enter the gender.',
     type: String,
   })
-  readonly email: string
+  readonly gender: EGender
 
-  @IsString()
-  @IsEnum(ENonAdminRole)
+  @IsDateString()
+  @IsNotEmpty()
+  @Matches(YYYY_MM_DD_REGEX)
   @ApiProperty({
-    example: ENonAdminRole.CLIENT,
-    description: 'Enter non-admin role:.',
+    example: '1990-01-25',
+    description: 'Enter the date of birth.',
     type: String,
   })
-  readonly role: ENonAdminRole
+  readonly birthDate: string
 }

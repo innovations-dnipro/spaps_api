@@ -24,8 +24,11 @@ export class UserService {
     return this.userRepository.findOneBy({ email })
   }
 
-  findUserByPhone(phone: string): Promise<Nullable<User>> {
-    return this.userRepository.findOneBy({ phone })
+  findUserByEmailWithRelations(email: string): Promise<Nullable<User>> {
+    return this.userRepository.findOne({
+      where: { email },
+      relations: ['clients', 'rentors'],
+    })
   }
 
   async createUser(userData: Partial<User>) {
@@ -66,20 +69,26 @@ export class UserService {
   }
 
   async updateUser(userData: Partial<User>) {
-    const { id, password } = userData
-
+    const { id, password, firstName, lastName, email } = userData
+    let hashedPassword: string
     const foundUser: Nullable<User> = await this.findUserById(id)
 
     if (!foundUser) {
       throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
     }
 
-    const saltRounds = parseInt(process.env.PASSWORD_SALT_ROUNDS)
-    const salt = await genSalt(saltRounds)
-    const hashedPassword: string = await hash(password, salt)
+    if (password) {
+      const saltRounds = parseInt(process.env.PASSWORD_SALT_ROUNDS)
+      const salt = await genSalt(saltRounds)
+      hashedPassword = await hash(password, salt)
+    }
+
     const updatedUser: User = this.userRepository.create({
       ...foundUser,
-      password: hashedPassword,
+      ...(password ? { password: hashedPassword } : {}),
+      ...(email ? { email } : {}),
+      ...(firstName ? { firstName } : {}),
+      ...(lastName ? { lastName } : {}),
     })
 
     return this.userRepository.save(updatedUser)

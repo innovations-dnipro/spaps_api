@@ -1,8 +1,11 @@
 import { Exclude } from 'class-transformer'
 import * as dotenv from 'dotenv'
-import { Column, Entity, Index } from 'typeorm'
+import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+import { Client } from '@spaps/modules/client/client.entity'
+import { Rentor } from '@spaps/modules/rentor/rentor.entity'
 
 import { BasicEntity } from '@spaps/core/basic-entity'
 import { ERole } from '@spaps/core/enums'
@@ -13,7 +16,7 @@ dotenv.config()
 export class User extends BasicEntity {
   @ApiProperty({
     example: 'John',
-    description: `User's first name. Max length is ${process.env.MAX_FIRST_NAME_LENGTH} characters.`,
+    description: `User's first name. Min length is ${process.env.MIN_FIRST_NAME_LENGTH} characters. Max length is ${process.env.MAX_FIRST_NAME_LENGTH} characters.`,
   })
   @Column({
     type: 'varchar',
@@ -25,7 +28,7 @@ export class User extends BasicEntity {
 
   @ApiProperty({
     example: 'Johnson',
-    description: `User's last name. Max length is ${process.env.MAX_LAST_NAME_LENGTH} characters.`,
+    description: `User's last name. Min length is ${process.env.MIN_LAST_NAME_LENGTH} characters. Max length is ${process.env.MAX_LAST_NAME_LENGTH} characters.`,
   })
   @Index()
   @Column({
@@ -49,19 +52,6 @@ export class User extends BasicEntity {
   email: string
 
   @ApiProperty({
-    example: '380681234567',
-    description: `User's telephone number. Max length is ${process.env.MAX_PHONE_LENGTH} characters.`,
-  })
-  @Index()
-  @Column({
-    type: 'varchar',
-    length: process.env.MAX_PHONE_LENGTH,
-    default: null,
-    nullable: true,
-  })
-  phone: string
-
-  @ApiProperty({
     example: '123Abc!',
     description: "User's password",
   })
@@ -76,4 +66,14 @@ export class User extends BasicEntity {
   })
   @Column({ type: 'enum', enum: ERole, default: ERole.ADMIN })
   role: ERole
+
+  // @ManyToMany(() => PublicFile, (publicFile) => publicFile.userAvatars)
+  // @JoinTable()
+  // avatars: PublicFile[]
+
+  @ManyToMany(() => Client, (client) => client.users)
+  clients: Client[]
+
+  @ManyToMany(() => Rentor, (rentor) => rentor.users)
+  rentors: Rentor[]
 }
