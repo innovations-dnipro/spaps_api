@@ -1,4 +1,4 @@
-import { Body, Controller, Param, ParseIntPipe, Put } from '@nestjs/common'
+import { Body, Controller, Get, Param, ParseIntPipe, Put } from '@nestjs/common'
 import {
   ApiBadGatewayResponse,
   ApiBody,
@@ -13,7 +13,7 @@ import { User } from '@spaps/modules/core-module/user/user.entity'
 
 import { Auth, CurrentUser } from '@spaps/core/decorators'
 import { ERole } from '@spaps/core/enums'
-import { ApiV1 } from '@spaps/core/utils'
+import { ApiV1, Nullable } from '@spaps/core/utils'
 
 import { Client } from './client.entity'
 import { ClientService } from './client.service'
@@ -27,6 +27,35 @@ import { UpdateClientDto } from './dto/update.client.dto'
 @Controller(ApiV1('clients'))
 export class ClientController {
   constructor(readonly clientService: ClientService) {}
+
+  @Get(':clientId')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiParam({
+    name: 'clientId',
+    type: 'number',
+    example: 1,
+  } as ApiParamOptions)
+  @ApiOperation({
+    summary:
+      'Get a client with the provided id. Role: SUPERADMIN, ADMIN. Permission: READ_CLIENTS.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Will return the client with the provided id.',
+    type: Client,
+    isArray: true,
+  })
+  async getClientById(
+    @Param('clientId', ParseIntPipe) clientId: number,
+    @CurrentUser() user: User,
+  ): Promise<Nullable<Client>> {
+    return this.clientService.getClientById({
+      id: clientId,
+      ...(user.role === ERole.CLIENT ? { tokenUserId: user.id } : {}),
+    })
+  }
 
   @Put(':clientId')
   @Auth({
@@ -50,14 +79,12 @@ export class ClientController {
     type: Client,
   })
   async updateClient(
-    @Param('clientId', ParseIntPipe) id: number,
+    @Param('clientId', ParseIntPipe) clientId: number,
     @CurrentUser() user: User,
     @Body() data: UpdateClientDto,
   ): Promise<Client> {
-    console.log({ user })
-
     return this.clientService.updateClient({
-      id,
+      id: clientId,
       ...data,
       ...(user.role === ERole.CLIENT ? { tokenUserId: user.id } : {}),
     })

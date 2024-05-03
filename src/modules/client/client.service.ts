@@ -30,6 +30,34 @@ export class ClientService {
     return this.clientRepository.findOneBy({ phone })
   }
 
+  async getClientById({
+    id,
+    tokenUserId,
+  }: {
+    id: number
+    tokenUserId?: number
+  }): Promise<Nullable<Client>> {
+    const foundClient = await this.findClientByIdWithRelations(id)
+    const userId = foundClient?.users?.[0]?.id
+
+    if (!foundClient) {
+      throw new HttpException(CError.CLIENT_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    if (!userId) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    if (tokenUserId && tokenUserId !== userId) {
+      throw new HttpException(
+        CError.WRONG_USER_ID_OR_CLIENT_ID,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    return foundClient
+  }
+
   async createClient(user: User): Promise<Partial<Client>> {
     const newClient: Client = await this.clientRepository.create({
       users: [user],
@@ -56,12 +84,11 @@ export class ClientService {
   }): Promise<Client> {
     const foundClient: Nullable<Client> =
       await this.findClientByIdWithRelations(id)
+    const userId = foundClient?.users?.[0]?.id
 
     if (!foundClient) {
       throw new HttpException(CError.CLIENT_NOT_FOUND, HttpStatus.BAD_REQUEST)
     }
-
-    const userId = foundClient.users[0].id
 
     if (!userId) {
       throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)

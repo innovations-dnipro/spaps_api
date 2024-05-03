@@ -23,7 +23,7 @@ dotenv.config()
   imports: [
     ConfigModule.forRoot({
       expandVariables: true,
-      envFilePath: ['.env'], //NOTE: for dev mode, use .serve.env; for prod mode, use stack.env
+      envFilePath: ['stack.env'], //NOTE: for dev mode, use .serve.env; for prod mode, use stack.env
     }),
     TypeOrmModule.forRoot({
       ...TypeORMConfig,
