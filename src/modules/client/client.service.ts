@@ -5,6 +5,9 @@ import { InjectRepository } from '@nestjs/typeorm'
 
 import { User } from '@spaps/modules/core-module/user/user.entity'
 import { UserService } from '@spaps/modules/core-module/user/user.service'
+import { FileUploadService } from '@spaps/modules/file-upload/file-upload.service'
+import { BufferedFile } from '@spaps/modules/file-upload/file.model'
+import { PublicFile } from '@spaps/modules/file-upload/public-file.entity'
 
 import { EGender } from '@spaps/core/enums'
 import { CError, Nullable } from '@spaps/core/utils'
@@ -17,12 +20,15 @@ export class ClientService {
     @InjectRepository(Client)
     private clientRepository: Repository<Client>,
     private readonly userService: UserService,
+    @InjectRepository(PublicFile)
+    private publicFileRepository: Repository<PublicFile>,
+    private readonly fileUploadService: FileUploadService,
   ) {}
 
   findClientByIdWithRelations(id: number): Promise<Nullable<Client>> {
     return this.clientRepository.findOne({
       where: { id },
-      relations: ['users'],
+      relations: ['users', 'avatar'],
     })
   }
 
@@ -121,5 +127,70 @@ export class ClientService {
     })
 
     return this.clientRepository.save(newClient)
+  }
+
+  async findClientAvatar(id: number): Promise<PublicFile> {
+    const foundClient = await this.findClientByIdWithRelations(id)
+
+    if (!foundClient) {
+      throw new HttpException(CError.CLIENT_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    return this.publicFileRepository.findOneBy({ id: foundClient?.avatar?.id })
+  }
+
+  async addClientAvatar(
+    id: number,
+    avatar: BufferedFile,
+  ): Promise<Nullable<Client>> {
+    if (!avatar) {
+      throw new HttpException(CError.NO_FILE_PROVIDED, HttpStatus.BAD_REQUEST)
+    }
+
+    const foundClient = await this.findClientByIdWithRelations(id)
+
+    if (!foundClient) {
+      throw new HttpException(CError.CLIENT_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    if (foundClient?.avatar) {
+      //NOTE: remove the previous avatar
+      const noAvatarClient = await this.clientRepository.create({
+        ...foundClient,
+        avatar: null,
+      })
+      await this.clientRepository.save(noAvatarClient)
+      await this.fileUploadService.deletePublicFile(foundClient?.avatar?.id)
+    }
+
+    const avatarData: PublicFile =
+      await this.fileUploadService.uploadPublicFile(avatar)
+
+    const createdPublicFile = await this.publicFileRepository.create({
+      ...avatarData,
+      avatarClient: foundClient,
+    })
+    await this.publicFileRepository.save(createdPublicFile)
+
+    return this.findClientByIdWithRelations(id)
+  }
+
+  async removeClientFile(clientId: number) {
+    const foundClient: Nullable<Client> =
+      await this.findClientByIdWithRelations(clientId)
+
+    if (!foundClient) {
+      throw new HttpException(CError.FILE_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const newClient: Client = await this.clientRepository.create({
+      ...foundClient,
+      avatar: null,
+    })
+    await this.clientRepository.save(newClient)
+
+    return await this.fileUploadService.deletePublicFile(
+      foundClient?.avatar?.id,
+    )
   }
 }

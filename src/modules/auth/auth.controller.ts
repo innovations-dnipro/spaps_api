@@ -166,7 +166,7 @@ export class AuthController {
     @Body() data: SetPasswordDto,
     @Req() request: ExRequest,
     @Res({ passthrough: true }) response: ExResponse,
-  ): Promise<User> {
+  ): Promise<boolean> {
     const hasRegisterToken = Boolean(
       request?.['cookies']?.[process.env.REGISTRATION_TOKEN_NAME],
     )
@@ -177,10 +177,12 @@ export class AuthController {
 
     response.clearCookie(process.env.REGISTRATION_TOKEN_NAME, this.cookieConfig)
 
-    return this.authService.createUser({
+    this.authService.createUser({
       ...registeredUser,
       ...data,
     })
+
+    return true
   }
 
   @Get('password-reset-email/:email')
