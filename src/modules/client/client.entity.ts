@@ -1,8 +1,17 @@
-import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm'
+import {
+  Column,
+  Entity,
+  Index,
+  JoinColumn,
+  JoinTable,
+  ManyToMany,
+  OneToOne,
+} from 'typeorm'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 import { User } from '@spaps/modules/core-module/user/user.entity'
+import { PublicFile } from '@spaps/modules/file-upload/public-file.entity'
 
 import { BasicEntity } from '@spaps/core/basic-entity'
 import { EGender } from '@spaps/core/enums'
@@ -50,7 +59,7 @@ export class Client extends BasicEntity {
   @JoinTable()
   users: User[]
 
-  // @ManyToMany(() => PublicFile, (publicFile) => publicFile.userAvatars)
-  // @JoinTable()
-  // avatars: PublicFile[]
+  @OneToOne(() => PublicFile, (publicFile) => publicFile.avatarClient)
+  @JoinColumn()
+  avatar: PublicFile
 }

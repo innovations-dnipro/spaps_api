@@ -21,4 +21,10 @@ export const CError = {
   USER_NOT_FOUND: `${EError.USER_NOT_FOUND}: User was not found.`,
   EMAIL_NOT_FOUND: `${EError.EMAIL_NOT_FOUND}: Email was not found`,
   CLIENT_NOT_FOUND: `${EError.CLIENT_NOT_FOUND}: Client was not found`,
+  FILE_NOT_FOUND: `${EError.FILE_NOT_FOUND}: A file was not found.`,
+  //NOTE: File error
+  NO_FILE_PROVIDED: `${EError.NO_FILE_PROVIDED}: No file was provided.`,
+  FILE_ID_NOT_RELATED: `${EError.FILE_ID_NOT_RELATED}: The item has no related file with this id.`,
+  FILE_ID_NOT_RELATED_TO_SECTION: `${EError.FILE_ID_NOT_RELATED_TO_SECTION}: A file with this id is not related to this file section.`,
+  FILE_SIZE_TOO_BIG: `${EError.FILE_SIZE_TOO_BIG}: File size exceeds the maximum limit.`,
 }

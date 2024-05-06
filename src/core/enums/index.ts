@@ -1,5 +1,6 @@
 export * from './email.variant'
 export * from './error'
+export * from './file.category'
 export * from './gender'
 export * from './process'
 export * from './roles'

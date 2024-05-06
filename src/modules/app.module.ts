@@ -13,6 +13,8 @@ import { Client } from './client/client.entity'
 import { ClientModule } from './client/client.module'
 import { CoreModule } from './core-module/core.module'
 import { User } from './core-module/user/user.entity'
+import { FileUploadModule } from './file-upload/file-upload.module'
+import { PublicFile } from './file-upload/public-file.entity'
 import { Rentor } from './rentor/rentor.entity'
 import { RentorModule } from './rentor/rentor.module'
 import { TaskModule } from './task/task.module'
@@ -27,13 +29,14 @@ dotenv.config()
     }),
     TypeOrmModule.forRoot({
       ...TypeORMConfig,
-      entities: [User, Rentor, Client],
+      entities: [User, Rentor, Client, PublicFile],
     } as TypeOrmModuleOptions),
     CoreModule,
     AuthModule,
     TaskModule,
     ClientModule,
     RentorModule,
+    FileUploadModule,
   ],
   controllers: [AppController],
   providers: [AppService],
