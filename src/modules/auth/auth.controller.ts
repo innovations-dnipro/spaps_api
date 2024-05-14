@@ -14,6 +14,7 @@ import {
   HttpStatus,
   Param,
   Post,
+  Put,
   Req,
   Res,
   UseGuards,
@@ -33,6 +34,7 @@ import { PasswordRestorationTokenJwtStrategy } from '@spaps/core/core-module/res
 import { User } from '@spaps/core/core-module/user/user.entity'
 import { UserService } from '@spaps/core/core-module/user/user.service'
 import { Auth } from '@spaps/core/decorators/auth.decorator'
+import { CurrentUser } from '@spaps/core/decorators/current.user.decorator'
 import { PasswordRestoringUser } from '@spaps/core/decorators/password.restoring.user.decorator'
 import { RegisteredUser } from '@spaps/core/decorators/registered.user.decorator'
 import { ERole } from '@spaps/core/enums'
@@ -373,12 +375,7 @@ export class AuthController {
       throw new HttpException(CError.NOT_LOGGED_IN, HttpStatus.BAD_REQUEST)
     }
 
-    console.log({ userData })
-
-    const a = await this.authService.getPersonalData(userData.id)
-    console.log({ a })
-
-    return a
+    return this.authService.getPersonalData(userData.id)
   }
 
   @Get('authorized')
@@ -403,5 +400,59 @@ export class AuthController {
     }
 
     return 200
+  }
+
+  @Get('change-email/:email')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Change user email.',
+  })
+  @ApiParam({
+    name: 'email',
+    type: 'string',
+    example: 'aa@aa.aa',
+  } as ApiParamOptions)
+  @ApiResponse({
+    status: 200,
+    description: 'Will return 200 if OK.',
+    type: Number,
+  })
+  async changeUserEmail(
+    @Param('email') email: string,
+    @CurrentUser() user: User,
+  ): Promise<number> {
+    return this.authService.changeEmail({
+      id: user.id,
+      email,
+    })
+  }
+
+  @Get('confirm-email-change-code/:code')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Change user email.',
+  })
+  @ApiParam({
+    name: 'code',
+    type: 'string',
+    example: '12345',
+  } as ApiParamOptions)
+  @ApiResponse({
+    status: 200,
+    description: 'Will return 200 if OK.',
+    type: Number,
+  })
+  async confirmEmailChangeCode(
+    @Param('code') code: string,
+    @CurrentUser() user: User,
+  ): Promise<User> {
+    return this.authService.confirmEmailChangeCode({
+      id: user.id,
+      code,
+    })
   }
 }

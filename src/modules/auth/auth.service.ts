@@ -263,4 +263,72 @@ export class AuthService {
   async getPersonalData(userId: number): Promise<User> {
     return this.userService.findUserByIdWithRelations(userId)
   }
+
+  async changeEmail({
+    id,
+    email,
+  }: {
+    id: number
+    email: string
+  }): Promise<number> {
+    const [foundUserByEmail, foundUserById]: [Nullable<User>, Nullable<User>] =
+      await Promise.all([
+        this.userService.findUserByEmail(email),
+        this.userService.findUserById(id),
+      ])
+
+    if (foundUserByEmail) {
+      throw new HttpException(
+        CError.EMAIL_ALREADY_EXISTS,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    if (!foundUserById) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const { firstName, lastName } = foundUserById
+    const fiveDigitCode = await this.getNewFiveRandomDigits()
+    const value = JSON.stringify({ id, email })
+    await this.cacheManager.set(fiveDigitCode, value, 900000) //NOTE: 15 mins
+
+    this.taskService.addSendCodeTask({
+      code: fiveDigitCode,
+      variant: EEmailVariant.EMAIL_CHANGE,
+      email,
+      firstName,
+      lastName,
+    })
+
+    return 200
+  }
+
+  async confirmEmailChangeCode({
+    id,
+    code,
+  }: {
+    id: number
+    code: string
+  }): Promise<User> {
+    const jsonValue = (await this.cacheManager.get(code)) as unknown as string
+
+    if (!jsonValue) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    const { id: savedId, email } = JSON.parse(jsonValue)
+
+    if (id !== savedId) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    return this.userService.updateUser({ id, email })
+  }
 }
