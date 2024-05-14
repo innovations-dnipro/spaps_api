@@ -3,12 +3,12 @@ import { Repository } from 'typeorm'
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
-import { User } from '@spaps/modules/core-module/user/user.entity'
-import { UserService } from '@spaps/modules/core-module/user/user.service'
 import { FileUploadService } from '@spaps/modules/file-upload/file-upload.service'
 import { BufferedFile } from '@spaps/modules/file-upload/file.model'
 import { PublicFile } from '@spaps/modules/file-upload/public-file.entity'
 
+import { User } from '@spaps/core/core-module/user/user.entity'
+import { UserService } from '@spaps/core/core-module/user/user.service'
 import { EGender } from '@spaps/core/enums'
 import { CError, Nullable } from '@spaps/core/utils'
 
@@ -24,6 +24,10 @@ export class ClientService {
     private publicFileRepository: Repository<PublicFile>,
     private readonly fileUploadService: FileUploadService,
   ) {}
+
+  findClientById(id: number): Promise<Nullable<Client>> {
+    return this.clientRepository.findOneBy({ id })
+  }
 
   findClientByIdWithRelations(id: number): Promise<Nullable<Client>> {
     return this.clientRepository.findOne({
@@ -139,10 +143,7 @@ export class ClientService {
     return this.publicFileRepository.findOneBy({ id: foundClient?.avatar?.id })
   }
 
-  async addClientAvatar(
-    id: number,
-    avatar: BufferedFile,
-  ): Promise<Nullable<Client>> {
+  async addClientAvatar(id: number, avatar: BufferedFile): Promise<number> {
     if (!avatar) {
       throw new HttpException(CError.NO_FILE_PROVIDED, HttpStatus.BAD_REQUEST)
     }
@@ -172,7 +173,7 @@ export class ClientService {
     })
     await this.publicFileRepository.save(createdPublicFile)
 
-    return this.findClientByIdWithRelations(id)
+    return 200
   }
 
   async removeClientFile(clientId: number) {

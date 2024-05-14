@@ -1,14 +1,13 @@
 import { Exclude } from 'class-transformer'
 import * as dotenv from 'dotenv'
-import { Column, Entity, Index, JoinTable, ManyToMany } from 'typeorm'
+import { Column, Entity, Index, ManyToMany } from 'typeorm'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { Client } from '@spaps/modules/client/client.entity'
-import { Rentor } from '@spaps/modules/rentor/rentor.entity'
-
-import { BasicEntity } from '@spaps/core/basic-entity'
-import { ERole } from '@spaps/core/enums'
+import { Client } from '../../../modules/client/client.entity'
+import { Rentor } from '../../../modules/rentor/rentor.entity'
+import { BasicEntity } from '../../basic-entity'
+import { ERole } from '../../enums'
 
 dotenv.config()
 

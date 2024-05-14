@@ -30,12 +30,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger'
 
-import { User } from '@spaps/modules/core-module/user/user.entity'
 import { FileUploadService } from '@spaps/modules/file-upload/file-upload.service'
 import { BufferedFile } from '@spaps/modules/file-upload/file.model'
 import { PublicFile } from '@spaps/modules/file-upload/public-file.entity'
 
-import { Auth, CurrentUser } from '@spaps/core/decorators'
+import { User } from '@spaps/core/core-module/user/user.entity'
+import { Auth } from '@spaps/core/decorators/auth.decorator'
+import { CurrentUser } from '@spaps/core/decorators/current.user.decorator'
 import { EFileCategory, ERole } from '@spaps/core/enums'
 import { ApiV1, IMAGE_TYPE_REGEX, Nullable } from '@spaps/core/utils'
 
@@ -150,8 +151,8 @@ export class ClientController {
   })
   @ApiResponse({
     status: 200,
-    description: 'Will return the client data.',
-    type: Client,
+    description: 'Will return 200 on success.',
+    type: Number,
   })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(FileInterceptor(EFileCategory.CLIENT_AVATAR))
@@ -170,7 +171,7 @@ export class ClientController {
       }),
     )
     clientAvatar: BufferedFile,
-  ): Promise<Client> {
+  ): Promise<number> {
     return this.clientService.addClientAvatar(clientId, clientAvatar)
   }
 

@@ -1,12 +1,11 @@
 import { genSalt, hash } from 'bcrypt'
 import { Repository } from 'typeorm'
 
-import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import { InjectRepository } from '@nestjs/typeorm'
 
-import { ENonAdminRole } from '@spaps/core/enums'
-import { CError, Nullable, findWrongEnumValue } from '@spaps/core/utils'
-
+import { ENonAdminRole } from '../../enums'
+import { CError, Nullable, findWrongEnumValue } from '../../utils'
 import { User } from './user.entity'
 
 @Injectable()
@@ -28,6 +27,15 @@ export class UserService {
     return this.userRepository.findOne({
       where: { email },
       relations: ['clients', 'rentors'],
+    })
+  }
+
+  findUserByIdWithRelations(id: number): Promise<Nullable<User>> {
+    console.log({ findUserByIdWithRelations: id })
+
+    return this.userRepository.findOne({
+      where: { id },
+      relations: ['clients', 'rentors', 'clients.avatar'],
     })
   }
 

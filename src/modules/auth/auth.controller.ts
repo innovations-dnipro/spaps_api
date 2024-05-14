@@ -28,12 +28,14 @@ import {
   ApiTags,
 } from '@nestjs/swagger'
 
-import { RegisterTokenJwtStrategy } from '@spaps/modules/core-module/register.token.jwt.strategy'
-import { PasswordRestorationTokenJwtStrategy } from '@spaps/modules/core-module/restore.password.token.jwt.strategy'
-import { User } from '@spaps/modules/core-module/user/user.entity'
-import { UserService } from '@spaps/modules/core-module/user/user.service'
-
-import { PasswordRestoringUser, RegisteredUser } from '@spaps/core/decorators'
+import { RegisterTokenJwtStrategy } from '@spaps/core/core-module/register.token.jwt.strategy'
+import { PasswordRestorationTokenJwtStrategy } from '@spaps/core/core-module/restore.password.token.jwt.strategy'
+import { User } from '@spaps/core/core-module/user/user.entity'
+import { UserService } from '@spaps/core/core-module/user/user.service'
+import { Auth } from '@spaps/core/decorators/auth.decorator'
+import { PasswordRestoringUser } from '@spaps/core/decorators/password.restoring.user.decorator'
+import { RegisteredUser } from '@spaps/core/decorators/registered.user.decorator'
+import { ERole } from '@spaps/core/enums'
 import { ApiV1, CError, Nullable, convertType } from '@spaps/core/utils'
 
 import { AuthService } from './auth.service'
@@ -349,5 +351,57 @@ export class AuthController {
     }
 
     return hasToken
+  }
+
+  @Get('personal-data')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary:
+      'Returns personal data of the logged-in user. Role: SUPERADMIN, ADMIN, CLIENT.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'This returns personal data of the logged in user',
+    type: User,
+  })
+  async getPersonalData(@Req() request: ExRequest): Promise<User> {
+    let userData = request?.['user']
+
+    if (!userData) {
+      throw new HttpException(CError.NOT_LOGGED_IN, HttpStatus.BAD_REQUEST)
+    }
+
+    console.log({ userData })
+
+    const a = await this.authService.getPersonalData(userData.id)
+    console.log({ a })
+
+    return a
+  }
+
+  @Get('authorized')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary:
+      'Returns personal data of the logged-in user. Role: SUPERADMIN, ADMIN, CLIENT.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'This returns 200 if authorized',
+    type: Number,
+    isArray: false,
+  })
+  async getIsAuthorized(@Req() request: ExRequest): Promise<number> {
+    let userData = request?.['user']
+
+    if (!userData) {
+      throw new HttpException(CError.NOT_LOGGED_IN, HttpStatus.BAD_REQUEST)
+    }
+
+    return 200
   }
 }

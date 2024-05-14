@@ -1,4 +1,4 @@
-import { EError } from '../enums'
+import { EError } from '../enums/error'
 
 export const CError = {
   //NOTE: Already exists
@@ -17,6 +17,8 @@ export const CError = {
   NO_REGISTER_TOKEN: `${EError.NO_REGISTER_TOKEN}: No registration token.`,
   NO_PASSWORD_RESTORATION_TOKEN: `${EError.NO_PASSWORD_RESTORATION_TOKEN}: No password restoration token.`,
   NO_TOKEN: `${EError.NO_TOKEN}: There is no token in cookies. Nobody is logged in.`,
+  //NOTE: not authorized
+  NOT_LOGGED_IN: `${EError.NOT_LOGGED_IN}: A user is not logged in.`,
   //NOTE: not found
   USER_NOT_FOUND: `${EError.USER_NOT_FOUND}: User was not found.`,
   EMAIL_NOT_FOUND: `${EError.EMAIL_NOT_FOUND}: Email was not found`,

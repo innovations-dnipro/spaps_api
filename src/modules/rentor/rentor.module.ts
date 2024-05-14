@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common'
 import { TypeOrmModule } from '@nestjs/typeorm'
 
-import { CoreModule } from '@spaps/modules/core-module/core.module'
+import { CoreModule } from '@spaps/core/core-module/core.module'
 
 import { RentorController } from './rentor.controller'
 import { Rentor } from './rentor.entity'

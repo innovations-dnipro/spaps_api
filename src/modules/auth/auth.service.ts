@@ -7,12 +7,12 @@ import { JwtService } from '@nestjs/jwt'
 
 import { Client } from '@spaps/modules/client/client.entity'
 import { ClientService } from '@spaps/modules/client/client.service'
-import { User } from '@spaps/modules/core-module/user/user.entity'
-import { UserService } from '@spaps/modules/core-module/user/user.service'
 import { Rentor } from '@spaps/modules/rentor/rentor.entity'
 import { RentorService } from '@spaps/modules/rentor/rentor.service'
 import { TaskService } from '@spaps/modules/task/task.service'
 
+import { User } from '@spaps/core/core-module/user/user.entity'
+import { UserService } from '@spaps/core/core-module/user/user.service'
 import { EEmailVariant, ENonAdminRole, ERole } from '@spaps/core/enums'
 import {
   CError,
@@ -258,5 +258,9 @@ export class AuthService {
       ...(client ? { clients: [client as Client] } : {}),
       ...(rentor ? { rentors: [rentor as Rentor] } : {}),
     }
+  }
+
+  async getPersonalData(userId: number): Promise<User> {
+    return this.userService.findUserByIdWithRelations(userId)
   }
 }
