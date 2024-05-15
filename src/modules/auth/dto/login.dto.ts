@@ -5,8 +5,11 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator'
+import * as dotenv from 'dotenv'
 
 import { ApiProperty } from '@nestjs/swagger'
+
+dotenv.config()
 
 export class LoginDto {
   @IsString()

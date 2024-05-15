@@ -7,12 +7,12 @@ import { JwtService } from '@nestjs/jwt'
 
 import { Client } from '@spaps/modules/client/client.entity'
 import { ClientService } from '@spaps/modules/client/client.service'
-import { User } from '@spaps/modules/core-module/user/user.entity'
-import { UserService } from '@spaps/modules/core-module/user/user.service'
 import { Rentor } from '@spaps/modules/rentor/rentor.entity'
 import { RentorService } from '@spaps/modules/rentor/rentor.service'
 import { TaskService } from '@spaps/modules/task/task.service'
 
+import { User } from '@spaps/core/core-module/user/user.entity'
+import { UserService } from '@spaps/core/core-module/user/user.service'
 import { EEmailVariant, ENonAdminRole, ERole } from '@spaps/core/enums'
 import {
   CError,
@@ -258,5 +258,77 @@ export class AuthService {
       ...(client ? { clients: [client as Client] } : {}),
       ...(rentor ? { rentors: [rentor as Rentor] } : {}),
     }
+  }
+
+  async getPersonalData(userId: number): Promise<User> {
+    return this.userService.findUserByIdWithRelations(userId)
+  }
+
+  async changeEmail({
+    id,
+    email,
+  }: {
+    id: number
+    email: string
+  }): Promise<number> {
+    const [foundUserByEmail, foundUserById]: [Nullable<User>, Nullable<User>] =
+      await Promise.all([
+        this.userService.findUserByEmail(email),
+        this.userService.findUserById(id),
+      ])
+
+    if (foundUserByEmail) {
+      throw new HttpException(
+        CError.EMAIL_ALREADY_EXISTS,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    if (!foundUserById) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const { firstName, lastName } = foundUserById
+    const fiveDigitCode = await this.getNewFiveRandomDigits()
+    const value = JSON.stringify({ id, email })
+    await this.cacheManager.set(fiveDigitCode, value, 900000) //NOTE: 15 mins
+
+    this.taskService.addSendCodeTask({
+      code: fiveDigitCode,
+      variant: EEmailVariant.EMAIL_CHANGE,
+      email,
+      firstName,
+      lastName,
+    })
+
+    return 200
+  }
+
+  async confirmEmailChangeCode({
+    id,
+    code,
+  }: {
+    id: number
+    code: string
+  }): Promise<User> {
+    const jsonValue = (await this.cacheManager.get(code)) as unknown as string
+
+    if (!jsonValue) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    const { id: savedId, email } = JSON.parse(jsonValue)
+
+    if (id !== savedId) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    return this.userService.updateUser({ id, email })
   }
 }

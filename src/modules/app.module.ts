@@ -4,6 +4,9 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 import { TypeOrmModule, TypeOrmModuleOptions } from '@nestjs/typeorm'
 
+import { CoreModule } from '@spaps/core/core-module/core.module'
+import { User } from '@spaps/core/core-module/user/user.entity'
+
 import { TypeORMConfig } from '@spaps/config'
 
 import { AppController } from './app.controller'
@@ -11,8 +14,6 @@ import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
 import { Client } from './client/client.entity'
 import { ClientModule } from './client/client.module'
-import { CoreModule } from './core-module/core.module'
-import { User } from './core-module/user/user.entity'
 import { FileUploadModule } from './file-upload/file-upload.module'
 import { PublicFile } from './file-upload/public-file.entity'
 import { Rentor } from './rentor/rentor.entity'

@@ -6,14 +6,15 @@ import {
   JoinTable,
   ManyToMany,
   OneToOne,
+  Relation,
 } from 'typeorm'
 
 import { ApiProperty } from '@nestjs/swagger'
 
-import { User } from '@spaps/modules/core-module/user/user.entity'
 import { PublicFile } from '@spaps/modules/file-upload/public-file.entity'
 
 import { BasicEntity } from '@spaps/core/basic-entity'
+import type { User } from '@spaps/core/core-module/user/user.entity'
 import { EGender } from '@spaps/core/enums'
 import { formatDateToDateTime } from '@spaps/core/utils'
 
@@ -55,9 +56,9 @@ export class Client extends BasicEntity {
   })
   phone: string
 
-  @ManyToMany(() => User, (user) => user.clients)
+  @ManyToMany('User', 'clients')
   @JoinTable()
-  users: User[]
+  users: Relation<User>[]
 
   @OneToOne(() => PublicFile, (publicFile) => publicFile.avatarClient)
   @JoinColumn()

@@ -1,8 +1,7 @@
 import { Entity, JoinTable, ManyToMany } from 'typeorm'
 
-import { User } from '@spaps/modules/core-module/user/user.entity'
-
 import { BasicEntity } from '@spaps/core/basic-entity'
+import { User } from '@spaps/core/core-module/user/user.entity'
 
 @Entity({ name: 'rentor' })
 export class Rentor extends BasicEntity {

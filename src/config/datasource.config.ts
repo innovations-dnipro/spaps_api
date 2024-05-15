@@ -11,8 +11,8 @@ export const datasource = new DataSource({
   password: process.env.MYSQL_PASSWORD,
   database: process.env.MYSQL_DATABASE,
   entities: ['dist/modules/**/*.entity{ .ts,.js}'],
-  migrations: ['dist/src/migrations/*{.ts,.js}'],
-  migrationsTableName: 'migrations_TypeORM',
+  // migrations: ['dist/src/migrations/*{.ts,.js}'],
+  // migrationsTableName: 'migrations_TypeORM',
   extra: {
     decimalNumbers: true,
   },
