@@ -51,6 +51,18 @@ export class User extends BasicEntity {
   email: string
 
   @ApiProperty({
+    example: '+380681231212',
+    description: `User's phone. Max length is 13 characters.`,
+  })
+  @Column({
+    type: 'varchar',
+    length: 13,
+    default: null,
+    nullable: true,
+  })
+  phone: string
+
+  @ApiProperty({
     example: '123Abc!',
     description: "User's password",
   })

@@ -23,6 +23,10 @@ export class UserService {
     return this.userRepository.findOneBy({ email })
   }
 
+  findUserByPhone(phone: string): Promise<Nullable<User>> {
+    return this.userRepository.findOneBy({ phone })
+  }
+
   findUserByEmailWithRelations(email: string): Promise<Nullable<User>> {
     return this.userRepository.findOne({
       where: { email },
@@ -31,8 +35,6 @@ export class UserService {
   }
 
   findUserByIdWithRelations(id: number): Promise<Nullable<User>> {
-    console.log({ findUserByIdWithRelations: id })
-
     return this.userRepository.findOne({
       where: { id },
       relations: ['clients', 'rentors', 'clients.avatar'],
@@ -77,7 +79,7 @@ export class UserService {
   }
 
   async updateUser(userData: Partial<User>) {
-    const { id, password, firstName, lastName, email } = userData
+    const { id, password, firstName, lastName, email, phone } = userData
     let hashedPassword: string
     const foundUser: Nullable<User> = await this.findUserById(id)
 
@@ -97,6 +99,7 @@ export class UserService {
       ...(email ? { email } : {}),
       ...(firstName ? { firstName } : {}),
       ...(lastName ? { lastName } : {}),
+      ...(phone ? { phone } : {}),
     })
 
     return this.userRepository.save(updatedUser)
