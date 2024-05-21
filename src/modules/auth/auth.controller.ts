@@ -357,11 +357,11 @@ export class AuthController {
 
   @Get('personal-data')
   @Auth({
-    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
   })
   @ApiOperation({
     summary:
-      'Returns personal data of the logged-in user. Role: SUPERADMIN, ADMIN, CLIENT.',
+      'Returns personal data of the logged-in user. Role: SUPERADMIN, ADMIN, CLIENT, RENTOR.',
   })
   @ApiResponse({
     status: 200,
@@ -380,11 +380,11 @@ export class AuthController {
 
   @Get('authorized')
   @Auth({
-    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
   })
   @ApiOperation({
     summary:
-      'Returns personal data of the logged-in user. Role: SUPERADMIN, ADMIN, CLIENT.',
+      'Returns personal data of the logged-in user. Role: SUPERADMIN, ADMIN, CLIENT, RENTOR.',
   })
   @ApiResponse({
     status: 200,
@@ -404,7 +404,7 @@ export class AuthController {
 
   @Get('change-email/:email')
   @Auth({
-    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
   })
   @ApiOperation({
     summary: 'Change user email.',
@@ -431,7 +431,7 @@ export class AuthController {
 
   @Get('confirm-email-change-code/:code')
   @Auth({
-    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
   })
   @ApiOperation({
     summary: 'Change user email.',
@@ -458,7 +458,7 @@ export class AuthController {
 
   @Get('change-phone/:phone')
   @Auth({
-    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
   })
   @ApiOperation({
     summary: 'Change user phone.',
@@ -485,7 +485,7 @@ export class AuthController {
 
   @Get('confirm-phone-change-code/:code')
   @Auth({
-    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
   })
   @ApiOperation({
     summary: 'Change user phone.',

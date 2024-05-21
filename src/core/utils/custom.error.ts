@@ -24,6 +24,7 @@ export const CError = {
   EMAIL_NOT_FOUND: `${EError.EMAIL_NOT_FOUND}: Email was not found`,
   CLIENT_NOT_FOUND: `${EError.CLIENT_NOT_FOUND}: Client was not found`,
   FILE_NOT_FOUND: `${EError.FILE_NOT_FOUND}: A file was not found.`,
+  RENTOR_NOT_FOUND: `${EError.RENTOR_NOT_FOUND}: Rentor was not found`,
   //NOTE: File error
   NO_FILE_PROVIDED: `${EError.NO_FILE_PROVIDED}: No file was provided.`,
   FILE_ID_NOT_RELATED: `${EError.FILE_ID_NOT_RELATED}: The item has no related file with this id.`,
