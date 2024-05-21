@@ -10,6 +10,9 @@ export class TaskService {
   constructor(
     @InjectQueue(ETask.SEND_CODE)
     private sendCode: Queue,
+
+    @InjectQueue(ETask.SEND_SMS)
+    private sendSMS: Queue,
   ) {}
 
   addSendCodeTask(data: {
@@ -20,5 +23,9 @@ export class TaskService {
     lastName: string
   }) {
     return this.sendCode.add(EProcess.TRANSCODE, data)
+  }
+
+  addSendSMSTask(data: { code: string; phone: string }) {
+    return this.sendSMS.add(EProcess.TRANSSMS, data)
   }
 }

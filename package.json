@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "TZ=Europe/Kiev nest start",
     "start:dev": "npm run migration:run && nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "npm run migration:run && node dist/main",
@@ -38,6 +38,7 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.0",
     "cookie-parser": "^1.4.6",
+    "dayjs": "^1.11.11",
     "handlebars": "^4.7.8",
     "jsonwebtoken": "^9.0.2",
     "module-alias": "^2.2.3",

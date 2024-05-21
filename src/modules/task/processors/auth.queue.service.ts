@@ -31,7 +31,7 @@ const emailText = {
 }
 
 @Processor(ETask.SEND_CODE)
-export class SendEmailProcessor {
+export class SendCodeProcessor {
   @OnQueueActive()
   onActive(job: Job) {
     console.log(

@@ -5,7 +5,8 @@ import { Module } from '@nestjs/common'
 
 import { ETask } from '@spaps/core/enums'
 
-import { SendEmailProcessor } from './processors/auth.queue.service'
+import { SendCodeProcessor } from './processors/auth.queue.service'
+import { SendSMSProcessor } from './processors/sms.queue.service'
 import { TaskService } from './task.service'
 
 dotenv.config()
@@ -28,8 +29,15 @@ dotenv.config()
         port: parseInt(process.env.REDIS_PRIMARY_PORT),
       },
     }),
+    BullModule.registerQueue({
+      name: ETask.SEND_SMS,
+      redis: {
+        host: process.env.REDIS_HOSTNAME,
+        port: parseInt(process.env.REDIS_PRIMARY_PORT),
+      },
+    }),
   ],
-  providers: [SendEmailProcessor, TaskService],
+  providers: [SendCodeProcessor, SendSMSProcessor, TaskService],
   exports: [TaskService],
 })
 export class TaskModule {}

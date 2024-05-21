@@ -455,4 +455,58 @@ export class AuthController {
       code,
     })
   }
+
+  @Get('change-phone/:phone')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Change user phone.',
+  })
+  @ApiParam({
+    name: 'phone',
+    type: 'string',
+    example: '+380681231212',
+  } as ApiParamOptions)
+  @ApiResponse({
+    status: 200,
+    description: 'Will return 200 if OK.',
+    type: Number,
+  })
+  async changeUserPhone(
+    @Param('phone') phone: string,
+    @CurrentUser() user: User,
+  ): Promise<number> {
+    return this.authService.changePhone({
+      id: user.id,
+      phone,
+    })
+  }
+
+  @Get('confirm-phone-change-code/:code')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Change user phone.',
+  })
+  @ApiParam({
+    name: 'code',
+    type: 'string',
+    example: '12345',
+  } as ApiParamOptions)
+  @ApiResponse({
+    status: 200,
+    description: 'Will return 200 if OK.',
+    type: Number,
+  })
+  async confirmPhoneChangeCode(
+    @Param('code') code: string,
+    @CurrentUser() user: User,
+  ): Promise<User> {
+    return this.authService.confirmPhoneChangeCode({
+      id: user.id,
+      code,
+    })
+  }
 }

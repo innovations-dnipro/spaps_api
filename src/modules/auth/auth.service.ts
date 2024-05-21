@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt'
 import { Cache } from 'cache-manager'
+import * as dotenv from 'dotenv'
 
 import { CACHE_MANAGER } from '@nestjs/cache-manager'
 import { HttpException, HttpStatus, Inject, Injectable } from '@nestjs/common'
@@ -22,6 +23,8 @@ import {
 } from '@spaps/core/utils'
 
 import { LoginDto, RegisterUserDto } from './dto'
+
+dotenv.config()
 
 @Injectable()
 export class AuthService {
@@ -86,8 +89,16 @@ export class AuthService {
       const fiveDigitCode = await this.getNewFiveRandomDigits()
       const value = JSON.stringify({ firstName, lastName, email, role })
       await Promise.all([
-        this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
-        this.cacheManager.set(email, email, 60000), //NOTE: 1 min
+        this.cacheManager.set(
+          fiveDigitCode,
+          value,
+          parseInt(process.env.CACHE_MANAGER_EMAIL_CODE_TIME),
+        ), //NOTE: 15 mins
+        this.cacheManager.set(
+          email,
+          email,
+          parseInt(process.env.CACHE_MANAGER_EMAIL_RESEND_BLOCK_TIME),
+        ), //NOTE: 1 min
       ])
 
       this.taskService.addSendCodeTask({
@@ -151,8 +162,16 @@ export class AuthService {
       const value = JSON.stringify({ email, id: foundUser.id })
 
       await Promise.all([
-        this.cacheManager.set(fiveDigitCode, value, 900000), //NOTE: 15 mins
-        this.cacheManager.set(email, email, 60000), //NOTE: 1 min
+        this.cacheManager.set(
+          fiveDigitCode,
+          value,
+          parseInt(process.env.CACHE_MANAGER_EMAIL_CODE_TIME),
+        ), //NOTE: 15 mins
+        this.cacheManager.set(
+          email,
+          email,
+          parseInt(process.env.CACHE_MANAGER_EMAIL_RESEND_BLOCK_TIME),
+        ), //NOTE: 1 min
       ])
 
       this.taskService.addSendCodeTask({
@@ -291,7 +310,11 @@ export class AuthService {
     const { firstName, lastName } = foundUserById
     const fiveDigitCode = await this.getNewFiveRandomDigits()
     const value = JSON.stringify({ id, email })
-    await this.cacheManager.set(fiveDigitCode, value, 900000) //NOTE: 15 mins
+    await this.cacheManager.set(
+      fiveDigitCode,
+      value,
+      parseInt(process.env.CACHE_MANAGER_EMAIL_CODE_TIME),
+    ) //NOTE: 15 mins
 
     this.taskService.addSendCodeTask({
       code: fiveDigitCode,
@@ -330,5 +353,73 @@ export class AuthService {
     }
 
     return this.userService.updateUser({ id, email })
+  }
+
+  async changePhone({
+    id,
+    phone,
+  }: {
+    id: number
+    phone: string
+  }): Promise<number> {
+    const [foundUserByPhone, foundUserById]: [Nullable<User>, Nullable<User>] =
+      await Promise.all([
+        this.userService.findUserByPhone(phone),
+        this.userService.findUserById(id),
+      ])
+
+    if (foundUserByPhone) {
+      throw new HttpException(
+        CError.PHONE_ALREADY_EXISTS,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    if (!foundUserById) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const fiveDigitCode = await this.getNewFiveRandomDigits()
+    const value = JSON.stringify({ id, phone })
+    await this.cacheManager.set(
+      fiveDigitCode,
+      value,
+      parseInt(process.env.CACHE_MANAGER_SMS_CODE_TIME),
+    ) //NOTE: 1 hour
+
+    this.taskService.addSendSMSTask({
+      code: fiveDigitCode,
+      phone,
+    })
+
+    return 200
+  }
+
+  async confirmPhoneChangeCode({
+    id,
+    code,
+  }: {
+    id: number
+    code: string
+  }): Promise<User> {
+    const jsonValue = (await this.cacheManager.get(code)) as unknown as string
+
+    if (!jsonValue) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    const { id: savedId, phone } = JSON.parse(jsonValue)
+
+    if (id !== savedId) {
+      throw new HttpException(
+        CError.WRONG_CONFIRMATION_CODE,
+        HttpStatus.BAD_REQUEST,
+      )
+    }
+
+    return this.userService.updateUser({ id, phone })
   }
 }
