@@ -43,19 +43,6 @@ export class Client extends BasicEntity {
   @Column({ type: 'enum', enum: EGender, default: null, nullable: true })
   gender: EGender
 
-  @ApiProperty({
-    example: '380681234567',
-    description: `User's telephone number. Max length is ${process.env.MAX_PHONE_LENGTH} characters.`,
-  })
-  @Index()
-  @Column({
-    type: 'varchar',
-    length: process.env.MAX_PHONE_LENGTH,
-    default: null,
-    nullable: true,
-  })
-  phone: string
-
   @ManyToMany('User', 'clients')
   @JoinTable()
   users: Relation<User>[]

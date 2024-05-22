@@ -36,10 +36,6 @@ export class ClientService {
     })
   }
 
-  findClientByPhone(phone: string): Promise<Client> {
-    return this.clientRepository.findOneBy({ phone })
-  }
-
   async getClientById({
     id,
     tokenUserId,
