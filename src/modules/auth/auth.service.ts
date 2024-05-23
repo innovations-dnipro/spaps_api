@@ -422,4 +422,16 @@ export class AuthService {
 
     return this.userService.updateUser({ id, phone })
   }
+
+  async postCurrentPassword({ id, password }): Promise<number> {
+    const foundUser: Nullable<User> = await this.userService.findUserById(id)
+
+    if (!foundUser) {
+      throw new HttpException(CError.USER_NOT_FOUND, HttpStatus.BAD_REQUEST)
+    }
+
+    const matchPasswords = await bcrypt.compare(password, foundUser.password)
+
+    return matchPasswords ? 200 : 400
+  }
 }

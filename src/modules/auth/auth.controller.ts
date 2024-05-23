@@ -43,6 +43,7 @@ import { ApiV1, CError, Nullable, convertType } from '@spaps/core/utils'
 import { AuthService } from './auth.service'
 import {
   LoginDto,
+  PostPasswordDto,
   RegisterUserDto,
   RestorePasswordDto,
   SetPasswordDto,
@@ -507,6 +508,60 @@ export class AuthController {
     return this.authService.confirmPhoneChangeCode({
       id: user.id,
       code,
+    })
+  }
+
+  @Post('current-password')
+  @HttpCode(200)
+  @Auth({
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Post current password for verification.',
+  })
+  @ApiBody({
+    description: 'Model for current password.',
+    type: PostPasswordDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'This will return 200 if correct.',
+    type: Number,
+  })
+  async postCurrentPassword(
+    @Body() { password }: PostPasswordDto,
+    @CurrentUser() user: User,
+  ): Promise<number> {
+    return this.authService.postCurrentPassword({
+      id: user.id,
+      password,
+    })
+  }
+
+  @Put('new-password')
+  @HttpCode(200)
+  @Auth({
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Post new password.',
+  })
+  @ApiBody({
+    description: 'Model for new password.',
+    type: PostPasswordDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'This will return an updated user if OK.',
+    type: Number,
+  })
+  async putNewPassword(
+    @Body() { password }: PostPasswordDto,
+    @CurrentUser() user: User,
+  ): Promise<User> {
+    return this.userService.updateUser({
+      id: user.id,
+      password,
     })
   }
 }
