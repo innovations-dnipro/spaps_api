@@ -18,6 +18,7 @@ async function bootstrap() {
     .setTitle('SPAPS')
     .setDescription('SPAPS API description')
     .setVersion('1.0')
+    .setExternalDoc('Postman Collection', 'api-json')
     .build()
   const document = SwaggerModule.createDocument(app, swaggerConfig)
 
