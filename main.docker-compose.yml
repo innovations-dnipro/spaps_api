@@ -4,12 +4,10 @@ services:
     container_name: ${APP_NAME}-mysql-${APP_ENV}
     image: 'mysql:8.2.0'
     restart: always
-    ports: 
-      - ${MYSQL_TCP_PORT}:3306
     env_file: 
       - .env
     networks:
-      - registry_default
+      - traefik
     volumes:
       - spaps-mysql-volume:/var/lib/mysql
       - ./deploy:/etc/mysql/mysql.conf.d
@@ -31,7 +29,7 @@ services:
     links: 
       - spaps-mysql
     networks:
-      - registry_default
+      - traefik
     labels:
       - 'traefik.enable=true'
       - 'traefik.http.routers.spaps-phpmyadmin.rule=Host(`${API_PHPMYADMIN_DOMAIN_NAME}`) && PathPrefix(`/`)'
@@ -43,7 +41,7 @@ services:
       - spaps-phpmyadmin-volume:/var/lib/phpmyadmin
 
   api:
-    image: registry.it-flumx.com/flumx_spaps_api:latest
+    build: '.'
     env_file: 
       - .env
     depends_on:
@@ -62,7 +60,7 @@ services:
       - 'traefik.http.routers.api.service=api'
       - 'traefik.http.services.api.loadbalancer.server.port=3000'
     networks:
-      - registry_default
+      - traefik
 
   mysql-cron-backup:
     image: fradelg/mysql-cron-backup
@@ -71,7 +69,7 @@ services:
     links: 
       - spaps-mysql
     networks:
-      - registry_default
+      - traefik
     environment:
       - MYSQL_HOST=spaps-mysql
       - MYSQL_USER=${MYSQL_USER}
@@ -95,7 +93,7 @@ services:
       - "51527:6379"
       - "51528:6380"
     networks:
-      - registry_default
+      - traefik
 
   spaps-minio:
     container_name: "${APP_NAME}-minio-${APP_ENV}"
@@ -130,7 +128,7 @@ services:
       - '51525:9000'
       - '51526:9001'
     networks:
-      - registry_default
+      - traefik
 
   de-fi_connect-minio-createbuckets:
     image: minio/mc
@@ -144,7 +142,7 @@ services:
       exit 0;
       "
     networks:
-      - registry_default
+      - traefik
 
 volumes:
   spaps-api-volume:
@@ -153,5 +151,5 @@ volumes:
   spaps-minio-data:
   
 networks:
-  registry_default:
+  traefik:
     external: true
