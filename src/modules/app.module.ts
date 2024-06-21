@@ -14,6 +14,8 @@ import { AppService } from './app.service'
 import { AuthModule } from './auth/auth.module'
 import { Client } from './client/client.entity'
 import { ClientModule } from './client/client.module'
+import { Complex } from './complex/complex.entity'
+import { ComplexModule } from './complex/complex.module'
 import { FileUploadModule } from './file-upload/file-upload.module'
 import { PublicFile } from './file-upload/public-file.entity'
 import { Rentor } from './rentor/rentor.entity'
@@ -30,12 +32,13 @@ dotenv.config()
     }),
     TypeOrmModule.forRoot({
       ...TypeORMConfig,
-      entities: [User, Rentor, Client, PublicFile],
+      entities: [User, Rentor, Client, Complex, PublicFile],
     } as TypeOrmModuleOptions),
     CoreModule,
     AuthModule,
     TaskModule,
     ClientModule,
+    ComplexModule,
     RentorModule,
     FileUploadModule,
   ],

@@ -1,10 +1,12 @@
-import { Column, Entity, OneToOne } from 'typeorm'
+import { Column, Entity, ManyToOne, OneToOne } from 'typeorm'
 
 import { ApiProperty } from '@nestjs/swagger'
 
 import { Client } from '@spaps/modules/client/client.entity'
 
 import { BasicEntity } from '@spaps/core/basic-entity'
+
+import { Complex } from '../complex/complex.entity'
 
 @Entity({ name: 'public_file' })
 export class PublicFile extends BasicEntity {
@@ -34,4 +36,7 @@ export class PublicFile extends BasicEntity {
 
   @OneToOne(() => Client, (clients) => clients.avatar)
   avatarClient: Client
+
+  @ManyToOne(() => Complex, (complex) => complex.complexPhoto)
+  complexPhoto: Complex
 }
