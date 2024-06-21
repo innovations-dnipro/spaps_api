@@ -67,8 +67,7 @@ export class ClientController {
     example: 1,
   } as ApiParamOptions)
   @ApiOperation({
-    summary:
-      'Get a client with the provided id. Role: SUPERADMIN, ADMIN. Permission: READ_CLIENTS.',
+    summary: 'Get a client with the provided id. Role: SUPERADMIN, ADMIN.',
   })
   @ApiResponse({
     status: 200,

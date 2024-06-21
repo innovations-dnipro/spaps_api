@@ -25,9 +25,11 @@ export const CError = {
   CLIENT_NOT_FOUND: `${EError.CLIENT_NOT_FOUND}: Client was not found`,
   FILE_NOT_FOUND: `${EError.FILE_NOT_FOUND}: A file was not found.`,
   RENTOR_NOT_FOUND: `${EError.RENTOR_NOT_FOUND}: Rentor was not found`,
+  COMPLEX_NOT_FOUND: `${EError.COMPLEX_NOT_FOUND}: Complex was not found`,
   //NOTE: File error
   NO_FILE_PROVIDED: `${EError.NO_FILE_PROVIDED}: No file was provided.`,
   FILE_ID_NOT_RELATED: `${EError.FILE_ID_NOT_RELATED}: The item has no related file with this id.`,
   FILE_ID_NOT_RELATED_TO_SECTION: `${EError.FILE_ID_NOT_RELATED_TO_SECTION}: A file with this id is not related to this file section.`,
   FILE_SIZE_TOO_BIG: `${EError.FILE_SIZE_TOO_BIG}: File size exceeds the maximum limit.`,
+  COMPLEX_ID_NOT_RELATED: `${EError.COMPLEX_ID_NOT_RELATED}: The complex with the provided id is not related to the provided rentor id.`,
 }
