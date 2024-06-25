@@ -37,7 +37,7 @@ import { Auth } from '@spaps/core/decorators/auth.decorator'
 import { CurrentUser } from '@spaps/core/decorators/current.user.decorator'
 import { PasswordRestoringUser } from '@spaps/core/decorators/password.restoring.user.decorator'
 import { RegisteredUser } from '@spaps/core/decorators/registered.user.decorator'
-import { ERole } from '@spaps/core/enums'
+import { ELocation, ERole } from '@spaps/core/enums'
 import { ApiV1, CError, Nullable, convertType } from '@spaps/core/utils'
 
 import { AuthService } from './auth.service'
@@ -562,6 +562,33 @@ export class AuthController {
     return this.userService.updateUser({
       id: user.id,
       password,
+    })
+  }
+
+  @Get('change-location/:location')
+  @Auth({
+    roles: [ERole.CLIENT, ERole.RENTOR, ERole.ADMIN, ERole.SUPERADMIN],
+  })
+  @ApiOperation({
+    summary: 'Change user location.',
+  })
+  @ApiParam({
+    name: 'location',
+    type: 'string',
+    example: ELocation.CHERKASY,
+  } as ApiParamOptions)
+  @ApiResponse({
+    status: 200,
+    description: 'Will return 200 if OK.',
+    type: Number,
+  })
+  async changeUserLocation(
+    @Param('location') location: ELocation,
+    @CurrentUser() user: User,
+  ): Promise<User> {
+    return this.userService.updateUser({
+      id: user.id,
+      location,
     })
   }
 }

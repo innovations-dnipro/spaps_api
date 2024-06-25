@@ -79,7 +79,8 @@ export class UserService {
   }
 
   async updateUser(userData: Partial<User>) {
-    const { id, password, firstName, lastName, email, phone } = userData
+    const { id, password, firstName, lastName, email, phone, location } =
+      userData
     let hashedPassword: string
     const foundUser: Nullable<User> = await this.findUserById(id)
 
@@ -100,6 +101,7 @@ export class UserService {
       ...(firstName ? { firstName } : {}),
       ...(lastName ? { lastName } : {}),
       ...(phone ? { phone } : {}),
+      ...(location ? { location } : {}),
     })
 
     return this.userRepository.save(updatedUser)
