@@ -7,7 +7,7 @@ import { ApiProperty } from '@nestjs/swagger'
 import { Client } from '../../../modules/client/client.entity'
 import { Rentor } from '../../../modules/rentor/rentor.entity'
 import { BasicEntity } from '../../basic-entity'
-import { ERole } from '../../enums'
+import { ELocation, ERole } from '../../enums'
 
 dotenv.config()
 
@@ -77,6 +77,13 @@ export class User extends BasicEntity {
   })
   @Column({ type: 'enum', enum: ERole, default: ERole.ADMIN })
   role: ERole
+
+  @ApiProperty({
+    example: ELocation.KYIV,
+    description: `User's location.`,
+  })
+  @Column({ type: 'enum', enum: ELocation, default: null, nullable: true })
+  location: ELocation
 
   // @ManyToMany(() => PublicFile, (publicFile) => publicFile.userAvatars)
   // @JoinTable()
