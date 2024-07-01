@@ -23,6 +23,32 @@ export class Complex extends BasicEntity {
   name: string
 
   @ApiProperty({
+    example: 'Complex Region',
+    description: `The region of the complex. Max length is 35 characters.`,
+  })
+  @Index()
+  @Column({
+    type: 'varchar',
+    length: 35,
+    default: null,
+    nullable: true,
+  })
+  region: string
+
+  @ApiProperty({
+    example: 'Complex Location',
+    description: `The location of the complex. Max length is 35 characters.`,
+  })
+  @Index()
+  @Column({
+    type: 'varchar',
+    length: 35,
+    default: null,
+    nullable: true,
+  })
+  location: string
+
+  @ApiProperty({
     example:
       'Some post-code, some region, some town, some street, some block, some suite.',
     description: 'The address of the complex. Max length is 254 characters.',
@@ -55,6 +81,6 @@ export class Complex extends BasicEntity {
   @Index()
   rentor: Rentor
 
-  @OneToMany(() => PublicFile, (publicFile) => publicFile.complexPhoto)
-  complexPhoto: PublicFile
+  @OneToMany(() => PublicFile, (publicFile) => publicFile.complex)
+  photos: PublicFile[]
 }

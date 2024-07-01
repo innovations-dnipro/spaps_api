@@ -9,15 +9,22 @@ import {
   Body,
   Controller,
   Delete,
+  FileTypeValidator,
   Get,
+  MaxFileSizeValidator,
   Param,
+  ParseFilePipe,
   ParseIntPipe,
   Post,
   Put,
+  UploadedFiles,
+  UseInterceptors,
 } from '@nestjs/common'
+import { FilesInterceptor } from '@nestjs/platform-express'
 import {
   ApiBadGatewayResponse,
   ApiBody,
+  ApiConsumes,
   ApiOperation,
   ApiParam,
   ApiParamOptions,
@@ -31,11 +38,13 @@ import { User } from '@spaps/core/core-module/user/user.entity'
 import { UserService } from '@spaps/core/core-module/user/user.service'
 import { Auth } from '@spaps/core/decorators/auth.decorator'
 import { CurrentUser } from '@spaps/core/decorators/current.user.decorator'
-import { ERole } from '@spaps/core/enums'
-import { ApiV1 } from '@spaps/core/utils'
+import { EFileCategory, ERole } from '@spaps/core/enums'
+import { ApiV1, IMAGE_TYPE_REGEX } from '@spaps/core/utils'
 
+import { BufferedFile } from '../file-upload/file.model'
 import { Complex } from './complex.entity'
 import { ComplexService } from './complex.service'
+import { AddComplexPhotosDto } from './dto/add.complex.photos.dto'
 import { UpdateComplexDto } from './dto/update.complex.dto'
 import { complexPaginationConfig } from './pagination/complex.pagination.config'
 
@@ -80,6 +89,8 @@ export class ComplexController {
   @ApiOperation({
     summary: 'Create a complex.',
   })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor(EFileCategory.COMPLEX_PHOTOS, 10))
   @ApiBody({
     description: 'Model to create an existing complex.',
     type: UpdateComplexDto,
@@ -92,7 +103,19 @@ export class ComplexController {
   async createComplex(
     @CurrentUser() user: User,
     @Body() data: UpdateComplexDto,
-  ): Promise<any> {
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 20000001,
+            message: 'Some error message',
+          }),
+          new FileTypeValidator({ fileType: IMAGE_TYPE_REGEX }),
+        ],
+      }),
+    )
+    files: Array<BufferedFile>,
+  ): Promise<Partial<Complex>> {
     const { rentors } = await this.userService.findUserByIdWithRelations(
       user.id,
     )
@@ -100,6 +123,7 @@ export class ComplexController {
     return this.complexService.createComplex({
       ...data,
       rentorId: rentors[0].id,
+      files,
     })
   }
 
@@ -170,5 +194,105 @@ export class ComplexController {
     })
 
     return 200
+  }
+
+  @Get('photo/:photoId')
+  @Auth({
+    roles: [ERole.RENTOR],
+  })
+  @ApiOperation({
+    summary: 'Get complex photo.',
+  })
+  @ApiParam({
+    name: 'photoId',
+    type: 'number',
+    example: 1,
+  } as ApiParamOptions)
+  async getDocumentsByEmployeeId(
+    @Param('photoId', ParseIntPipe) photoId: number,
+  ): Promise<any> {
+    return this.complexService.findComplexPhoto(photoId)
+  }
+
+  @Post(':complexId/photos')
+  @Auth({
+    roles: [ERole.RENTOR],
+  })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(FilesInterceptor(EFileCategory.COMPLEX_PHOTOS, 10))
+  @ApiOperation({
+    summary: 'Adds images to the complex whose id is provided.',
+  })
+  @ApiParam({
+    name: 'complexId',
+    type: 'number',
+    example: 1,
+  } as ApiParamOptions)
+  @ApiBody({
+    description:
+      'Model to add new images related to the complex whose id is provided.',
+    type: AddComplexPhotosDto,
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Will return 200 on success.',
+    type: Number,
+  })
+  async addComplexPhotos(
+    @Param('complexId', ParseIntPipe) complexId: number,
+    @Body() data: AddComplexPhotosDto, //NOTE: it needs to be declared here for dto check to run
+    @UploadedFiles(
+      new ParseFilePipe({
+        validators: [
+          new MaxFileSizeValidator({
+            maxSize: 20000001,
+            message: 'Some error message',
+          }),
+          new FileTypeValidator({ fileType: IMAGE_TYPE_REGEX }),
+        ],
+      }),
+    )
+    complexPhotos: Array<BufferedFile>,
+  ): Promise<number> {
+    return this.complexService.addComplexPhotos(complexId, complexPhotos)
+  }
+
+  @Delete(':complexId/file/:fileId')
+  @Auth({
+    roles: [ERole.RENTOR],
+  })
+  @ApiOperation({
+    summary:
+      'Remove a photo with fileId related to the complex whose complexId is provided. Permission: DELETE_CLIENT_FILES.',
+  })
+  @ApiParam({
+    name: 'complexId',
+    type: 'number',
+    example: 1,
+  } as ApiParamOptions)
+  @ApiParam({
+    name: 'fileId',
+    type: 'number',
+    example: 1,
+  } as ApiParamOptions)
+  @ApiResponse({
+    status: 200,
+    description: 'Will return boolean result.',
+    type: Boolean,
+  })
+  async removeClientFile(
+    @Param('complexId', ParseIntPipe) clientId: number,
+    @Param('fileId', ParseIntPipe) fileId: number,
+  ): Promise<number> {
+    const response = await this.complexService.removeComplexPhoto(
+      clientId,
+      fileId,
+    )
+
+    if (response === true) {
+      return 200
+    }
+
+    return 422
   }
 }
