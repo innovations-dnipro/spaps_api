@@ -117,10 +117,10 @@ export class ComplexService {
 
     const newComplex: Complex = await this.complexRepository.create({
       id,
-      name,
-      address,
-      description,
-      rentor: { id: rentorId },
+      ...(name ? { name } : {}),
+      ...(address ? { address } : {}),
+      ...(description ? { description } : {}),
+      ...(rentorId ? { rentor: { id: rentorId } } : {}),
     })
 
     const savedComplex: Partial<Complex> =

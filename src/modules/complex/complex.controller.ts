@@ -1,9 +1,11 @@
+import { Response as ExResponse } from 'express'
 import {
   ApiPaginationQuery,
   Paginate,
   PaginateQuery,
   Paginated,
 } from 'nestjs-paginate'
+import * as stream from 'stream'
 
 import {
   Body,
@@ -17,6 +19,8 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Res,
+  StreamableFile,
   UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common'
@@ -42,6 +46,7 @@ import { EFileCategory, ERole } from '@spaps/core/enums'
 import { ApiV1, IMAGE_TYPE_REGEX } from '@spaps/core/utils'
 
 import { BufferedFile } from '../file-upload/file.model'
+import { PublicFile } from '../file-upload/public-file.entity'
 import { Complex } from './complex.entity'
 import { ComplexService } from './complex.service'
 import { AddComplexPhotosDto } from './dto/add.complex.photos.dto'
@@ -108,10 +113,11 @@ export class ComplexController {
         validators: [
           new MaxFileSizeValidator({
             maxSize: 20000001,
-            message: 'Some error message',
+            message: 'File size must not exceed 20MB.',
           }),
           new FileTypeValidator({ fileType: IMAGE_TYPE_REGEX }),
         ],
+        fileIsRequired: false,
       }),
     )
     files: Array<BufferedFile>,
@@ -125,6 +131,25 @@ export class ComplexController {
       rentorId: rentors[0].id,
       files,
     })
+  }
+
+  @Get(':complexId')
+  @Auth({
+    roles: [ERole.RENTOR],
+  })
+  @ApiOperation({
+    summary: 'Get complex by complex id. Role: RENTOR.',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Will return a complex with that ID if exists.',
+    type: Complex,
+    isArray: true,
+  })
+  async getComplexById(
+    @Param('complexId', ParseIntPipe) complexId: number,
+  ): Promise<Complex> {
+    return this.complexService.findComplexByIdWithRelations(complexId)
   }
 
   @Put(':complexId')
@@ -210,8 +235,21 @@ export class ComplexController {
   } as ApiParamOptions)
   async getDocumentsByEmployeeId(
     @Param('photoId', ParseIntPipe) photoId: number,
+    @Res({ passthrough: true }) res: ExResponse,
   ): Promise<any> {
-    return this.complexService.findComplexPhoto(photoId)
+    const {
+      fileInfo,
+      stream,
+    }: { fileInfo: PublicFile; stream: stream.Readable } =
+      await this.fileUploadService.getFile(
+        photoId,
+        EFileCategory.COMPLEX_PHOTOS,
+      )
+
+    return new StreamableFile(stream, {
+      disposition: `inline filename="${fileInfo.name}`,
+      type: fileInfo.type,
+    })
   }
 
   @Post(':complexId/photos')
