@@ -17,9 +17,9 @@ import { EEmailVariant, EProcess, ETask } from '@spaps/core/enums'
 dotenv.config()
 
 const emailSubject = {
-  [EEmailVariant.EMAIL_REGISTRATION]: 'SPAPS реєстрація',
-  [EEmailVariant.PASSWORD_CHANGE]: 'SPAPS зміна паролю',
-  [EEmailVariant.EMAIL_CHANGE]: 'Spaps зміна електронної пошти',
+  [EEmailVariant.EMAIL_REGISTRATION]: 'Підтвердіть реєстрацію',
+  [EEmailVariant.PASSWORD_CHANGE]: 'Підтвердіть зміну паролю',
+  [EEmailVariant.EMAIL_CHANGE]: 'Підтвердіть зміну електронної пошти',
 }
 
 const emailText = {
@@ -63,6 +63,8 @@ export class SendCodeProcessor {
     const API_USER_ID = process.env.SENDPULSE_API_USER
     const API_SECRET = process.env.SENDPULSE_API_SECRET
     const TOKEN_STORAGE = process.env.SENDPULSE_TOKEN_STORAGE
+    const BACKEND_DOMAIN_NAME = process.env.BACKEND_DOMAIN_NAME
+    const FRONTEND_DOMAIN_NAME = process.env.FRONTEND_DOMAIN_NAME
 
     const template = Handlebars.compile(
       fs.readFileSync('src/email-templates/email.confirmation.hbs', 'utf8'),
@@ -77,6 +79,8 @@ export class SendCodeProcessor {
           subject: emailSubject[variant],
           text: emailText[variant],
           code,
+          backendDomainName: BACKEND_DOMAIN_NAME,
+          frontendDomainName: FRONTEND_DOMAIN_NAME
         }),
         subject: emailSubject[variant],
         from: {

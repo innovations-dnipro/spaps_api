@@ -37,6 +37,6 @@ export class PublicFile extends BasicEntity {
   @OneToOne(() => Client, (clients) => clients.avatar)
   avatarClient: Client
 
-  @ManyToOne(() => Complex, (complex) => complex.complexPhoto)
-  complexPhoto: Complex
+  @ManyToOne(() => Complex, (complex) => complex.photos)
+  complex: Complex
 }

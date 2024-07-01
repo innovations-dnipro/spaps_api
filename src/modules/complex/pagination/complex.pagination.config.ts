@@ -1,4 +1,4 @@
-import { PaginateConfig } from 'nestjs-paginate'
+import { FilterOperator, PaginateConfig } from 'nestjs-paginate'
 
 import { Complex } from '../complex.entity'
 
@@ -7,4 +7,7 @@ export const complexPaginationConfig: PaginateConfig<Complex> = {
   searchableColumns: ['id', 'name', 'rentor.id'],
   relations: ['rentor'],
   defaultSortBy: [['id', 'ASC']],
+  filterableColumns: {
+    id: [FilterOperator.EQ],
+  },
 }
